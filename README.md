@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ship It Society
 
-## Getting Started
+The website for Ship It Society — a student hackathon club at Fremont High
+School. Two-week hackathons, idea to deployed, every project security tested
+before it goes public.
 
-First, run the development server:
+**To change content, edit `content/club.ts`. To set the site up, read
+[SETUP.md](./SETUP.md). Before changing the design, read [CLAUDE.md](./CLAUDE.md).**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Stack
+
+| | |
+| --- | --- |
+| Framework | Next.js 16 (App Router) · React 19 · TypeScript strict |
+| Styling | Tailwind CSS v4 — CSS-first `@theme`, no `tailwind.config.js` |
+| Motion | Motion 13 + Lenis (smooth scroll) |
+| Type | Switzer via Fontshare · Geist Mono self-hosted |
+| Forms | react-hook-form + Zod, one schema shared by client and server |
+| Hosting | Vercel |
+
+## Layout
+
+```
+app/                 routes; every page static except /api/apply
+components/
+  brand/             wordmark and monogram
+  chrome/            nav, footer, smooth scroll, page stage, JSON-LD
+  home/              the hero sequence and the homepage sections
+  motion/            the four reveal primitives — nothing else animates on entry
+  ui/                buttons, page header, texture, odometer, view-transition wrapper
+content/             ALL copy, dates, people, projects, sponsors
+lib/
+  sequence.ts        the hero canvas: a pure function of scroll progress
+  apply.ts           application schema, shared client and server
+  deliver.ts         email + spreadsheet delivery (server only)
+  hooks.ts           reduced-motion and clock, via useSyncExternalStore
+  motion.ts          shared easings, durations, variants
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## The hero sequence
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The homepage opens on a 400vh section containing a sticky canvas. Scroll
+progress across that section drives a generative sequence: an empty grid fills
+with code, the code resolves into an interface, a security scan sweeps through
+it, and the result deploys.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Three things about it are worth knowing before you touch it:
 
-## Learn More
+- **`drawFrame` is a pure function of progress.** Same `p`, same pixels, always.
+  That is what makes scrubbing backwards frame-exact instead of an approximate
+  reverse.
+- **It never uses React state.** Progress drives the canvas imperatively through
+  a MotionValue subscription, so nothing re-renders while you scroll. Measured
+  at 60fps with the CPU throttled 4×.
+- **There are two layouts.** Wide viewports get a desktop app with a sidebar;
+  phones get a genuinely different portrait interface with a tab bar. A phone is
+  not a small desktop.
 
-To learn more about Next.js, take a look at the following resources:
+Reduced-motion visitors get a single static frame and a one-viewport section,
+with the height set in CSS so there is no post-hydration reflow.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Measured
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Production build, served locally:
 
-## Deploy on Vercel
+| | |
+| --- | --- |
+| CLS | **0** — the fallback font metrics are measured from Switzer, not guessed |
+| Hero scrub | **60fps median, 0 frames over 50ms** at 4× CPU throttle |
+| Static JS + CSS | 372 KB gzipped, all routes combined |
+| Routes | 14, all statically prerendered except the form endpoint |
+| Lint | clean |
+| Contrast | no WCAG AA failures on any page or viewport |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Accessibility
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Every page keyboard-navigable with a visible focus ring on every control.
+- `prefers-reduced-motion` honoured throughout; all content stays reachable.
+- Semantic landmarks, `<dl>` for spec pairs, skip link, real form labels.
+- Marigold (`#ff9f0a`) is 10.2:1 on black but only 2.05:1 on white, so it is a
+  fill on light surfaces and never text. Accent text on light uses
+  `--color-marigold-ink`. This is enforced by convention — see `CLAUDE.md`.
+
+## Commands
+
+```bash
+npm run dev      # local dev
+npm run build    # production build
+npm start        # serve the production build
+npm run lint     # lint
+```

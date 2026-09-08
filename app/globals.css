@@ -1,26 +1,311 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Ship It Society — design tokens
+   This file is the contract. Components never hardcode a hex, size, or easing.
+   ========================================================================== */
+
+@theme {
+  /* --- Type families -------------------------------------------------- */
+  --font-sans: "Switzer", "Switzer Fallback", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+
+  /* --- Color ----------------------------------------------------------
+     Marigold is 10.2:1 on #000 but only 2.05:1 on #fff.
+     On light surfaces it is a FILL, never text. Accent text on light
+     must use --color-marigold-ink (7.1:1). See CLAUDE.md.
+     ------------------------------------------------------------------- */
+  --color-ink: #000000;
+  --color-surface-900: #1d1d1f;
+  --color-surface-800: #2a2a2c;
+  --color-surface-700: #424245;
+  --color-muted: #86868b;
+  --color-muted-dim: #6e6e73;
+  --color-line-dark: rgb(255 255 255 / 0.14);
+  --color-line-dark-soft: rgb(255 255 255 / 0.07);
+  --color-line-light: #d2d2d7;
+  --color-line-light-soft: #e8e8ed;
+  --color-surface-100: #f5f5f7;
+  --color-surface-50: #fafafc;
+  --color-paper: #ffffff;
+
+  --color-marigold: #ff9f0a;
+  --color-marigold-hi: #ffb340;
+  --color-marigold-ink: #8a4b00;
+  --color-marigold-dim: rgb(255 159 10 / 0.14);
+
+  /* --- Type scale ------------------------------------------------------
+     Body is 17px (Apple's), not 16. Tracking tightens optically as size
+     grows. Display steps clamp for small screens automatically.
+     ------------------------------------------------------------------- */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 1.2;
+  --text-2xs--letter-spacing: 0.09em;
+
+  --text-xs: 12px;
+  --text-xs--line-height: 1.4;
+  --text-xs--letter-spacing: 0.02em;
+
+  --text-sm: 14px;
+  --text-sm--line-height: 1.5;
+  --text-sm--letter-spacing: 0em;
+
+  --text-base: 17px;
+  --text-base--line-height: 1.53;
+  --text-base--letter-spacing: -0.011em;
+
+  --text-lg: clamp(18px, 1.4vw, 21px);
+  --text-lg--line-height: 1.45;
+  --text-lg--letter-spacing: -0.015em;
+
+  --text-xl: clamp(22px, 2.4vw, 28px);
+  --text-xl--line-height: 1.28;
+  --text-xl--letter-spacing: -0.02em;
+
+  --text-2xl: clamp(28px, 4vw, 40px);
+  --text-2xl--line-height: 1.14;
+  --text-2xl--letter-spacing: -0.025em;
+
+  --text-3xl: clamp(27px, 5.2vw, 56px);
+  --text-3xl--line-height: 1.06;
+  --text-3xl--letter-spacing: -0.03em;
+
+  --text-4xl: clamp(31px, 7vw, 80px);
+  --text-4xl--line-height: 1.0;
+  --text-4xl--letter-spacing: -0.034em;
+
+  --text-5xl: clamp(34px, 9.4vw, 128px);
+  --text-5xl--line-height: 0.94;
+  --text-5xl--letter-spacing: -0.04em;
+
+  /* --- Radii: a system, not a value ------------------------------------ */
+  --radius-none: 0px;
+  --radius-card: 12px;
+  --radius-inset: 6px;
+  --radius-pill: 980px;
+
+  /* --- Easing ---------------------------------------------------------- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* --- Layout ---------------------------------------------------------- */
+  --spacing-edge: 24px;
+  --container-page: 1320px;
+}
+
+/* Durations (not a Tailwind namespace — referenced as var()) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --dur-fast: 180ms;
+  --dur-base: 280ms;
+  --dur-slow: 420ms;
+  --dur-xslow: 700ms;
+
+  /* Stage: interpolated by StageShift on the home page, static elsewhere. */
+  --page-bg: #f5f5f7;
+  --stage-fg: #1d1d1f;
+  --stage-muted: #6e6e73;
+  --stage-line: #d2d2d7;
+
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Route-level stage. Set before first paint by the script in the root layout,
+   and kept in sync on navigation by StageRoot. On the home page StageShift
+   writes inline properties on <html>, which outrank this rule, and removes
+   them on unmount so the page falls back here cleanly. */
+:root[data-stage="dark"] {
+  --page-bg: #000000;
+  --stage-fg: #f5f5f7;
+  --stage-muted: #86868b;
+  --stage-line: rgb(255 255 255 / 0.14);
+
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ==========================================================================
+   Fallback font metrics — measured from Switzer 400 (upem 1000, xHeight 531,
+   ascent 980, descent 250, lineGap 90) against Arial (upem 2048, xHeight 1062).
+   These exact overrides make the webfont swap cause zero layout shift.
+   ========================================================================== */
+@font-face {
+  font-family: "Switzer Fallback";
+  src: local("Helvetica Neue"), local("Helvetica"), local("Arial");
+  size-adjust: 102.4%;
+  ascent-override: 95.7%;
+  descent-override: 24.41%;
+  line-gap-override: 8.79%;
+}
+
+/* ========================================================================== */
+
+/* The reset MUST live in @layer base.
+
+   Unlayered CSS outranks every cascade layer, so an unlayered
+   `a { color: inherit }` silently beats Tailwind's `.text-ink` utility —
+   which rendered every marigold call-to-action as near-white text on orange
+   (2.06:1, a WCAG failure) rather than black. Layering it puts utilities
+   back on top, where they belong. Do not move these rules out of the layer. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: auto; /* Lenis owns scrolling */
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--page-bg);
+    color: var(--stage-fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.53;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-synthesis-weight: none;
+  }
+
+  ::selection {
+    background: var(--color-marigold);
+    color: #000;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-marigold);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  h1, h2, h3, h4, p, figure, blockquote, dl, dd {
+    margin: 0;
+  }
+  ul, ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  img, svg, canvas {
+    display: block;
+    max-width: 100%;
+  }
+  input, textarea, select {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Kill the iOS tap flash — we design our own :active states */
+  a, button, input, textarea, select {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+/* Page gutter. Wider on desktop; never lets content touch the edge. */
+@utility edge {
+  width: 100%;
+  max-width: var(--container-page);
+  margin-inline: auto;
+  padding-inline: 24px;
+  @media (width >= 768px) {
+    padding-inline: 40px;
+  }
+  @media (width >= 1280px) {
+    padding-inline: 56px;
+  }
+}
+
+/* The 12-column field. Collapses to 4 on small screens. */
+@utility grid12 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 20px;
+  @media (width >= 768px) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+}
+
+/* Uppercase mono eyebrow — the "technical layer". */
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hairline rules that follow the current stage. */
+@utility rule-t {
+  border-top: 1px solid var(--stage-line);
+}
+@utility rule-b {
+  border-bottom: 1px solid var(--stage-line);
+}
+
+/* Optical hanging for large display type set flush-left. */
+@utility optical {
+  margin-left: -0.055em;
+}
+
+/* The hero's scroll runway. Reduced motion collapses it to a single
+   viewport in CSS rather than in JS, so the correct height is server-
+   rendered and there is no post-hydration reflow for those visitors. */
+@utility hero-track {
+  height: 400svh;
+  @media (prefers-reduced-motion: reduce) {
+    height: 100svh;
+  }
+}
+
+@utility balance {
+  text-wrap: balance;
+}
+@utility pretty {
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   Reduced motion — every scroll effect must still show all content.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
