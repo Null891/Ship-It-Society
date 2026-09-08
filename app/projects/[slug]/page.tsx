@@ -11,6 +11,12 @@ export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
 
+/* The full set of projects is known at build time from content/projects.ts,
+   so an unknown slug is a broken link, not a page to render on demand.
+   Returning 404 for those is both more correct and keeps the whole route
+   static rather than leaving a serverless function behind. */
+export const dynamicParams = false;
+
 export async function generateMetadata({
   params,
 }: {
