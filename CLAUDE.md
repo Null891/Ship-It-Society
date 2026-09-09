@@ -32,7 +32,7 @@ Breaking one is a bug, not a style preference.
 Short declaratives. No exclamation marks. No "unleash", "empower", "journey",
 "dive in", "game-changer". State the fact and stop.
 
-Good: "One month. Idea to shipped."
+Good: "Two weeks. Idea to shipped."
 Bad:  "Embark on an exciting journey to unleash your coding potential!"
 
 ## Tokens

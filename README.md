@@ -1,7 +1,7 @@
 # Ship It Society
 
 The website for Ship It Society — a student hackathon club at Fremont High
-School. One-month hackathons, idea to deployed, every project security tested
+School. Two-week hackathons, idea to deployed, every project security tested
 before it goes public.
 
 **To change content, edit `content/club.ts`. To set the site up, read

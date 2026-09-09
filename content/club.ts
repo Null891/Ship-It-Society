@@ -38,7 +38,7 @@ export const hero = {
 
 export const stats = [
   { value: 30, suffix: "", label: "Days per hackathon", detail: "Idea to deployed" },
-  { value: 0, suffix: "", label: "Meetings scheduled", detail: "TBD" },
+  { value: 2, suffix: "", label: "Weeks between meets", detail: "Officers run every event" },
   { value: 100, suffix: "%", label: "Projects security tested", detail: "Before anything is public" },
   { value: 0, suffix: "", label: "Slide decks required", detail: "Ship a product, not a pitch" },
 ];
@@ -68,7 +68,7 @@ export const format = {
     {
       id: "week-01",
       label: "Week 01",
-      title: "Scope",
+      title: "Build",
       summary: "Decide fast, then make something that runs.",
       days: [
         {
@@ -77,9 +77,14 @@ export const format = {
           body: "Teams form, ideas get pitched in ninety seconds, scope gets cut in half.",
         },
         {
-          day: "Day 2-6",
+          day: "Day 2-3",
           title: "Spec",
           body: "One page. What it does, who it is for, and what you are deliberately not building.",
+        },
+        {
+          day: "Day 4-6",
+          title: "Core build",
+          body: "The single feature the product cannot exist without. Nothing else yet.",
         },
         {
           day: "Day 7",
@@ -91,57 +96,31 @@ export const format = {
     {
       id: "week-02",
       label: "Week 02",
-      title: "Build",
-      summary: "The core product, working end to end.",
+      title: "Ship",
+      summary: "Harden it, prove it is safe, put it on the internet.",
       days: [
         {
-          day: "Day 8-13",
-          title: "Core build",
-          body: "The single feature the product cannot exist without. Nothing else yet.",
-        },
-        {
-          day: "Day 14",
-          title: "Checkpoint",
-          body: "Feature complete and demoable locally. Scope locks here.",
-        },
-      ],
-    },
-    {
-      id: "week-03",
-      label: "Week 03",
-      title: "Harden",
-      summary: "Fill in, then prove it is safe.",
-      days: [
-        {
-          day: "Day 15-20",
+          day: "Day 8-10",
           title: "Fill in",
           body: "The second and third features, if and only if the first one holds.",
         },
         {
-          day: "Day 21",
+          day: "Day 11",
           title: "Security review",
           body: "A scan runs against the build. Findings come back as a list you have to clear.",
         },
-      ],
-    },
-    {
-      id: "week-04",
-      label: "Week 04",
-      title: "Ship",
-      summary: "Fix it, put it on the internet, show it.",
-      days: [
         {
-          day: "Day 22-24",
+          day: "Day 12",
           title: "Fix and re-scan",
           body: "Nothing ships with open findings. Run it again until it comes back clean.",
         },
         {
-          day: "Day 25-28",
+          day: "Day 13",
           title: "Deploy",
           body: "Live URL, real users. It exists outside your laptop now.",
         },
         {
-          day: "Day 29-30",
+          day: "Day 14",
           title: "Demo",
           body: "Five minutes in front of the room. Judges use the product, not the deck.",
         },
@@ -201,9 +180,9 @@ export const prizes = {
 
 export const schedule = {
   cadence: "TBD", // TODO: confirm the day
-  time: "TBD", // TODO: confirm the time
-  room: "TBD", // TODO: confirm the room
-  nextMeeting: "", // TODO: real date, meetings TBD
+  time: "3:30 - 5:00 PM", // TODO: confirm the time
+  room: "Room TBD", // TODO: confirm the room
+  nextMeeting: "2026-09-23T15:30:00-07:00", // TODO: real date
   nextHackathonDeadline: "2026-10-23T23:59:00-07:00", // TODO: real date
   nextHackathonName: "Hackathon 01", // TODO: name it
   season: [

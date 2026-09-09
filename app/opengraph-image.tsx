@@ -89,7 +89,7 @@ export default function OpengraphImage() {
               textTransform: "uppercase",
             }}
           >
-            One-month hackathons
+            Two-week hackathons
           </span>
         </div>
       </div>
