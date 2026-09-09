@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ApplyForm } from "@/components/join/ApplyForm";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { GatePlate, PlateCaption } from "@/components/ui/Plates";
 import { club, join, schedule } from "@/content/club";
 
 export const metadata: Metadata = {
@@ -33,6 +34,13 @@ export default function JoinPage() {
                 <p className="text-base text-[var(--stage-muted)]">
                   {[schedule.time, schedule.room].filter(Boolean).join(" · ")}
                 </p>
+              </div>
+
+              {/* The one plate driven by scroll SPEED rather than position:
+                  the shards extend as you move and settle when you stop. */}
+              <div className="rule-t mt-8 pt-6">
+                <GatePlate className="aspect-[16/11] w-full text-[var(--stage-fg)]" />
+                <PlateCaption index="05" label="Signal plate" className="mt-3" />
               </div>
 
               <div className="rule-t mt-8 pt-5">

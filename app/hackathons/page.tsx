@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Grain } from "@/components/ui/Texture";
 import { Format } from "@/components/home/Format";
 import { Eyebrow } from "@/components/ui/Button";
+import { OrbitPlate, PlateCaption } from "@/components/ui/Plates";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { meetingLine, prizes, schedule, security } from "@/content/club";
 
@@ -46,6 +47,20 @@ export default function HackathonsPage() {
             <p className="mono-label text-[var(--stage-muted)]">
               {meetingLine}
             </p>
+          </div>
+
+          {/* The season, drawn as orbits. The marker rides a real SVG motion
+              path rather than being rotated, so it tracks the geometry the
+              way a body actually travels an orbit. */}
+          <div className="mt-10 grid12 items-center gap-y-8">
+            <OrbitPlate className="col-span-4 aspect-square w-full max-w-[300px] justify-self-center text-[var(--stage-fg)] md:col-span-4" />
+            <div className="col-span-4 md:col-span-7 md:col-start-6">
+              <p className="pretty max-w-[46ch] text-lg text-[var(--stage-muted)]">
+                Three cycles a season. Each one starts the week the last one
+                ships, so there is always something in the air.
+              </p>
+              <PlateCaption index="02" label="Season plate" className="mt-6" />
+            </div>
           </div>
 
           <Stagger as="ul" className="mt-10">

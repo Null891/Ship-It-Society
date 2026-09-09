@@ -5,6 +5,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { projects, projectsPage } from "@/content/projects";
 import { CoverPlate } from "@/components/ui/Texture";
 import { Morph } from "@/components/ui/Morph";
+import { MosaicPlate, PlateCaption } from "@/components/ui/Plates";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -25,6 +26,20 @@ export default function ProjectsPage() {
         title={["Everything the club", "has shipped."]}
         standfirst={projectsPage.standfirst}
       />
+
+      {/* The archive's own plate: a word that resolves out of a pixel mosaic
+          as it enters, echoing the half-pixelated display type on the
+          editorial reference. It is real text, so it stays selectable and
+          readable to assistive tech — the mosaic is an overlay on top. */}
+      <section className="pt-12 md:pt-16" aria-hidden>
+        <div className="edge">
+          <MosaicPlate
+            word="SHIPPED"
+            className="optical text-5xl font-semibold leading-[0.9] tracking-[-0.045em]"
+          />
+          <PlateCaption index="01" label="Archive plate" className="mt-5" />
+        </div>
+      </section>
 
       <section className="pt-16 md:pt-24">
         <div className="edge">

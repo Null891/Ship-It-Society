@@ -2,6 +2,7 @@ import { HeroSequence } from "@/components/home/HeroSequence";
 import { StageShift } from "@/components/chrome/Stage";
 import { Countdown } from "@/components/home/Countdown";
 import { Format } from "@/components/home/Format";
+import { CyclePlate } from "@/components/home/CyclePlate";
 import { IndexRail } from "@/components/ui/Poster";
 import {
   JoinCta,
@@ -46,6 +47,7 @@ export default function HomePage() {
       <Premise />
       <Stats />
       <Format />
+      <CyclePlate />
       <Security />
       <Prizes />
       <SponsorRow />

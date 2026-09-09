@@ -3,6 +3,7 @@ import { premise, prizes, security, stats, join } from "@/content/club";
 import { sponsors } from "@/content/sponsors";
 import { Eyebrow } from "@/components/ui/Button";
 import { Annotation, Marquee, RegMark } from "@/components/ui/Poster";
+import { EuclidPlate, PlateCaption } from "@/components/ui/Plates";
 import { Grain } from "@/components/ui/Texture";
 import {
   CountUp,
@@ -97,6 +98,12 @@ export function Security() {
                 </p>
               ))}
             </div>
+
+            {/* The review plate. Its diagonal wipe assembles as the section
+                scrolls, and the two marks counter-rotate — a different
+                gesture from every other plate on the site. */}
+            <EuclidPlate className="mt-10 aspect-[4/3] w-full text-[var(--stage-fg)]" />
+            <PlateCaption index="04" label="Review plate" className="mt-3" />
           </div>
 
           <Reveal className="col-span-4 mt-10 md:col-span-6 md:col-start-7 md:mt-0">
