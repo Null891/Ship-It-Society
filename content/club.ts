@@ -180,9 +180,9 @@ export const prizes = {
 
 export const schedule = {
   cadence: "TBD", // TODO: confirm the day
-  time: "3:30 - 5:00 PM", // TODO: confirm the time
+  time: "1:30 - 2:10 PM", // TODO: confirm the time
   room: "Room TBD", // TODO: confirm the room
-  nextMeeting: "2026-09-23T15:30:00-07:00", // TODO: real date
+  nextMeeting: "2026-09-23T13:30:00-07:00", // TODO: real date
   nextHackathonDeadline: "2026-10-23T23:59:00-07:00", // TODO: real date
   nextHackathonName: "Hackathon 01", // TODO: name it
   season: [
