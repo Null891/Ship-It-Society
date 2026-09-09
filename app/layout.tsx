@@ -3,6 +3,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { SmoothScroll } from "@/components/chrome/SmoothScroll";
 import { StageRoot } from "@/components/chrome/Stage";
+import { RevealRoot } from "@/components/motion/RevealRoot";
 import { Nav } from "@/components/chrome/Nav";
 import { Footer } from "@/components/chrome/Footer";
 import { StructuredData } from "@/components/chrome/StructuredData";
@@ -40,12 +41,39 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "#f5f5f7" },
     { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
-  colorScheme: "light",
+  colorScheme: "light dark",
 };
 
-/* Runs before first paint so the home page never flashes light before the
-   cinematic hero takes over. StageRoot keeps it correct after navigation. */
-const STAGE_SCRIPT = `try{document.documentElement.dataset.stage=location.pathname==="/"?"dark":"light"}catch(e){}`;
+/* Runs before first paint. Three jobs:
+
+   1. data-stage — so the home page never flashes light before the cinematic
+      hero takes over. StageRoot keeps it correct after navigation.
+
+   2. the `anim` class — this is the gate for every entry reveal on the site.
+      Reveals are hidden ONLY under html.anim, so this script decides whether
+      anything is allowed to be invisible. It says yes only when the tab is
+      actually visible, IntersectionObserver exists to bring content back, and
+      the user has not asked for reduced motion.
+
+      That ordering is the fix for a real bug: the hero used to ship
+      opacity:0 from the server and rely on an observer to reveal it, so a
+      page opened in a background tab stayed blank indefinitely — the
+      observer does not fire for a tab that was never displayed. Now the
+      background-tab path simply never adds `anim`, and the content is
+      visible from the first byte. Same for JS being disabled entirely.
+
+   3. a dead-man's switch. If `anim` is set but RevealRoot never mounts —
+      a hydration failure, a bundle that 404s — nothing would ever add
+      `is-in` and the page would stay hidden. So the script disarms itself
+      after three seconds unless RevealRoot has reported in. The worst case
+      degrades to "everything visible, no animation" rather than a blank
+      page. */
+const BOOT_SCRIPT = `try{var d=document,e=d.documentElement;
+e.dataset.stage=location.pathname==="/"?"dark":"light";
+if(d.visibilityState==="visible"&&"IntersectionObserver" in window&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
+e.classList.add("anim");
+setTimeout(function(){if(e.dataset.revealReady!=="1")e.classList.remove("anim")},3000)}
+}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -91,11 +119,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f%5B%5D=switzer@400,500,600,700&display=swap"
         />
-        <script dangerouslySetInnerHTML={{ __html: STAGE_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <StructuredData />
       </head>
       <body className="antialiased">
         <StageRoot />
+        <RevealRoot />
         <SmoothScroll>
           <Nav />
           <main id="main">{children}</main>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
-import { officers, schedule } from "@/content/club";
+import { meetingLine, officers } from "@/content/club";
 
 export const metadata: Metadata = {
   title: "Team",
@@ -10,10 +10,9 @@ export const metadata: Metadata = {
     "The officers who run Ship It Society, and who run every hackathon end to end.",
 };
 
-/** Initials for the fallback tile. Placeholder names collapse to a dash so
- *  an unfinished entry reads as deliberate rather than broken. */
+/** Initials for the monogram tile shown when an officer has no photo. */
 function initials(name: string) {
-  if (!name || name === "TODO") return "—";
+  if (!name) return "—";
   return name
     .split(/\s+/)
     .slice(0, 2)
@@ -38,12 +37,12 @@ export default function TeamPage() {
             className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3"
           >
             {officers.map((o, i) => (
-              <StaggerItem as="li" key={`${o.name}-${i}`}>
+              <StaggerItem index={i} as="li" key={`${o.name}-${i}`}>
                 <div className="relative aspect-[4/5] overflow-hidden rounded-card bg-surface-100">
                   {o.image ? (
                     <Image
                       src={o.image}
-                      alt={o.name === "TODO" ? "Officer portrait" : o.name}
+                      alt={o.name}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover"
@@ -64,13 +63,10 @@ export default function TeamPage() {
 
                 <div className="mt-5">
                   <h2 className="text-xl font-semibold tracking-[-0.022em]">
-                    {o.name === "TODO" ? "Name to come" : o.name}
+                    {o.name}
                   </h2>
                   <p className="mono-label mt-2 text-[var(--stage-muted)]">
                     {o.role}
-                  </p>
-                  <p className="pretty mt-3 max-w-[38ch] text-base text-[var(--stage-muted)]">
-                    {o.bio}
                   </p>
                 </div>
               </StaggerItem>
@@ -83,7 +79,7 @@ export default function TeamPage() {
               are interested.
             </p>
             <p className="mono-label text-[var(--stage-muted)]">
-              {schedule.cadence} &middot; {schedule.room}
+              {meetingLine}
             </p>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { Grain } from "@/components/ui/Texture";
 import { Format } from "@/components/home/Format";
 import { Eyebrow } from "@/components/ui/Button";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
-import { prizes, schedule, security } from "@/content/club";
+import { meetingLine, prizes, schedule, security } from "@/content/club";
 
 export const metadata: Metadata = {
   title: "The format",
@@ -44,13 +44,14 @@ export default function HackathonsPage() {
               </h2>
             </div>
             <p className="mono-label text-[var(--stage-muted)]">
-              {schedule.cadence} &middot; {schedule.room}
+              {meetingLine}
             </p>
           </div>
 
           <Stagger as="ul" className="mt-10">
-            {schedule.season.map((s) => (
+            {schedule.season.map((s, i) => (
               <StaggerItem
+                index={i}
                 as="li"
                 key={s.name}
                 className="rule-t grid grid-cols-[1fr_auto] items-baseline gap-x-6 gap-y-1 py-6 md:grid-cols-[minmax(0,260px)_1fr_auto]"
@@ -101,8 +102,8 @@ export default function HackathonsPage() {
               as="dl"
               className="col-span-4 mt-10 md:col-span-6 md:col-start-7 md:mt-0"
             >
-              {prizes.criteria.map((c) => (
-                <StaggerItem key={c.term} className="rule-t py-5">
+              {prizes.criteria.map((c, i) => (
+                <StaggerItem index={i} key={c.term} className="rule-t py-5">
                   <div className="flex items-baseline justify-between gap-4">
                     <dt className="text-lg font-medium">{c.term}</dt>
                     <span className="tnum mono-label text-marigold-ink">

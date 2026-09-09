@@ -23,8 +23,8 @@ export default function SponsorsPage() {
       <section className="pt-16 md:pt-24">
         <div className="edge">
           <Stagger as="ul" stagger={0.08}>
-            {sponsors.map((s) => (
-              <StaggerItem as="li" key={s.name} className="rule-t py-10 md:py-12">
+            {sponsors.map((s, i) => (
+              <StaggerItem index={i} as="li" key={s.name} className="rule-t py-10 md:py-12">
                 <div className="grid12 items-start gap-y-5">
                   <div className="col-span-4 md:col-span-4">
                     <span className="text-2xl font-semibold tracking-[-0.03em]">
@@ -50,11 +50,10 @@ export default function SponsorsPage() {
                       >
                         Visit
                       </a>
-                    ) : (
-                      <span className="mono-label text-[var(--stage-muted)]">
-                        Link to come
-                      </span>
-                    )}
+                    ) : null}
+                    {/* A sponsor without a URL renders nothing here. Printing
+                        "Link to come" advertises an unfinished page — which is
+                        what got this site rejected from a domain registry. */}
                   </div>
                 </div>
               </StaggerItem>

@@ -1,51 +1,44 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
-import {
-  animate,
-  motion,
-  useInView,
-  useReducedMotion,
-  type Variants,
-} from "motion/react";
-import {
-  DUR,
-  EASE_OUT_EXPO,
-  VIEWPORT,
-  maskedLine,
-  riseIn,
-  staggerParent,
-} from "@/lib/motion";
+import { CountUp } from "./CountUp";
 
 /* ==========================================================================
-   The four reveal primitives the whole site uses. Nothing else animates on
-   entry — see the motion budget in CLAUDE.md.
+   The reveal primitives the whole site uses.
+
+   These are SERVER components. They emit plain markup plus a data attribute;
+   all the motion lives in CSS (globals.css) and is driven by the single
+   observer in RevealRoot. That means:
+
+     · the SSR payload contains no opacity:0 — content is visible by default
+     · no per-element client component, so less JS on every page
+     · no hydration mismatch, because nothing is decided at render time
+
+   The old version used Motion's whileInView with initial="hidden", which
+   shipped opacity:0 from the server and left the hero permanently blank if
+   the observer never fired. See globals.css for the full explanation.
    ========================================================================== */
+
+export { CountUp };
 
 /** A quiet rise. For supporting content only, never for body paragraphs. */
 export function Reveal({
   children,
   delay = 0,
   className = "",
-  as = "div",
+  as: Tag = "div",
 }: {
   children: React.ReactNode;
+  /** Stagger index, in 60ms steps. */
   delay?: number;
   className?: string;
   as?: "div" | "li" | "section";
 }) {
-  const Comp = motion[as];
   return (
-    <Comp
+    <Tag
+      data-reveal=""
       className={className}
-      initial="hidden"
-      whileInView="show"
-      viewport={VIEWPORT}
-      variants={riseIn}
-      transition={{ delay }}
+      style={delay ? ({ "--reveal-i": delay } as React.CSSProperties) : undefined}
     >
       {children}
-    </Comp>
+    </Tag>
   );
 }
 
@@ -68,135 +61,65 @@ export function RevealLines({
   id?: string;
 }) {
   const list = Array.isArray(lines) ? lines : [lines];
-  const reduced = useReducedMotion();
-
-  if (reduced) {
-    return (
-      <Tag id={id} className={className}>
-        {list.map((l) => (
-          <span key={l} className="block">
-            {l}
-          </span>
-        ))}
-      </Tag>
-    );
-  }
-
-  // The viewport observer MUST sit on the heading, never on the masked line
-  // itself. A masked line starts translated 110% down, which puts it entirely
-  // outside its overflow:hidden parent — and IntersectionObserver clips
-  // intersection by ancestor overflow, so such an element never reports as
-  // in view. Observing the child deadlocks: it stays hidden forever because
-  // it is hidden. The heading is always in flow, so it always resolves.
-  const MotionTag = motion[Tag];
-
   return (
-    <MotionTag
-      id={id}
-      className={className}
-      initial="hidden"
-      whileInView="show"
-      viewport={VIEWPORT}
-      variants={staggerParent(0.08, delay)}
-    >
-      {list.map((line) => (
+    <Tag id={id} data-reveal-lines="" className={className}>
+      {list.map((line, i) => (
         <span key={line} className="block overflow-hidden pb-[0.08em]">
-          <motion.span className="block" variants={maskedLine}>
+          <span
+            className="reveal-line"
+            style={{ "--reveal-i": i + delay } as React.CSSProperties}
+          >
             {line}
-          </motion.span>
+          </span>
         </span>
       ))}
-    </MotionTag>
+    </Tag>
   );
 }
 
+/**
+ * A group whose children rise in sequence. The parent is the observed
+ * element, so the whole group reveals together with per-child delays —
+ * children are never observed individually.
+ */
 export function Stagger({
   children,
   className = "",
-  stagger = 0.06,
-  delay = 0,
-  as = "div",
+  as: Tag = "div",
 }: {
   children: React.ReactNode;
   className?: string;
+  /** Accepted for call-site compatibility; spacing comes from --reveal-i. */
   stagger?: number;
   delay?: number;
   as?: "div" | "ul" | "dl";
 }) {
-  const Comp = motion[as];
   return (
-    <Comp
-      className={className}
-      initial="hidden"
-      whileInView="show"
-      viewport={VIEWPORT}
-      variants={staggerParent(stagger, delay) as Variants}
-    >
+    <Tag data-stagger="" className={className}>
       {children}
-    </Comp>
+    </Tag>
   );
 }
 
 export function StaggerItem({
   children,
   className = "",
-  as = "div",
+  index = 0,
+  as: Tag = "div",
 }: {
   children: React.ReactNode;
   className?: string;
+  /** Position in the group. Drives the 60ms-per-step delay. */
+  index?: number;
   as?: "div" | "li" | "dd" | "article";
 }) {
-  const Comp = motion[as];
   return (
-    <Comp className={className} variants={riseIn}>
+    <Tag
+      data-reveal=""
+      className={className}
+      style={{ "--reveal-i": index } as React.CSSProperties}
+    >
       {children}
-    </Comp>
+    </Tag>
   );
 }
-
-/**
- * A number that counts to its value once, when it comes into view.
- * Reduced motion, and the no-JS server render, both show the final value —
- * the number is never withheld from anyone.
- */
-export function CountUp({
-  value,
-  suffix = "",
-  className = "",
-  duration = 1.1,
-}: {
-  value: number;
-  suffix?: string;
-  className?: string;
-  duration?: number;
-}) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "0px 0px -15% 0px" });
-  const reduced = useReducedMotion();
-  const [display, setDisplay] = useState(value);
-  const started = useRef(false);
-
-  useEffect(() => {
-    if (!inView || reduced || started.current || value === 0) return;
-    started.current = true;
-    setDisplay(0);
-    const controls = animate(0, value, {
-      duration,
-      ease: EASE_OUT_EXPO,
-      onUpdate: (v) => setDisplay(Math.round(v)),
-    });
-    return () => controls.stop();
-  }, [inView, reduced, value, duration]);
-
-  return (
-    <span ref={ref} className={`tnum ${className}`}>
-      {display}
-      {suffix}
-    </span>
-  );
-}
-
-/** Fades and lifts a block on hover. Used only on genuinely clickable cards. */
-export const cardHover = {
-  transition: { duration: DUR.base, ease: EASE_OUT_EXPO },
-};

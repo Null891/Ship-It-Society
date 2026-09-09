@@ -1,3 +1,5 @@
+import { club } from "./club";
+
 /* ==========================================================================
    Sponsors.
 
@@ -22,16 +24,16 @@ export const sponsors: Sponsor[] = [
     name: "Base44",
     blurb: "AI-assisted app building. The tooling members use to move fast in week one.",
     contribution: "Platform access for every member and part of the prize pool.",
-    url: "", // TODO: sponsor URL
-    logo: "", // TODO: /brand/base44.svg
+    url: "https://base44.com",
+    logo: "", // /brand/base44.svg once we have the asset
     tier: "founding",
   },
   {
     name: "ArgosX",
     blurb: "Security testing. Every project passes through it before it gets a public URL.",
     contribution: "Scans for every team and part of the prize pool.",
-    url: "", // TODO: sponsor URL
-    logo: "", // TODO: /brand/argosx.svg
+    url: "https://getargosx.com",
+    logo: "", // /brand/argosx.svg once we have the asset
     tier: "founding",
   },
   {
@@ -39,7 +41,7 @@ export const sponsors: Sponsor[] = [
     blurb: "Backend development courses. Practical Python, Go, and servers members learn by building.",
     contribution: "Learning resources for members and part of the prize pool.",
     url: "https://www.boot.dev",
-    logo: "", // TODO: /brand/bootdev.svg
+    logo: "", // /brand/bootdev.svg once we have the asset
     tier: "supporting",
   },
 ];
@@ -72,6 +74,6 @@ export const sponsorPage = {
         detail: "A short write-up after each hackathon. What shipped, what it cost, who took part.",
       },
     ],
-    cta: { label: "Email the club", href: "mailto:" },
+    cta: { label: "Email the club", href: `mailto:${club.email}` },
   },
 };

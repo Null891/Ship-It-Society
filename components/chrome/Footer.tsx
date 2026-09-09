@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
-import { club, footer, schedule } from "@/content/club";
+import { club, footer, meetingLine } from "@/content/club";
 
 const COLUMNS = [
   {
@@ -39,7 +39,7 @@ export function Footer() {
               {footer.note}
             </p>
             <p className="mono-label mt-6 text-[var(--stage-muted)]">
-              {schedule.cadence} &middot; {schedule.time}
+              {meetingLine}
             </p>
           </div>
 
@@ -52,12 +52,12 @@ export function Footer() {
               <h2 className="mono-label mb-4 text-[var(--stage-muted)]">
                 {col.title}
               </h2>
-              <ul className="space-y-2.5">
+              <ul className="space-y-1">
                 {col.links.map((l) => (
                   <li key={l.href}>
                     <Link
                       href={l.href}
-                      className="text-sm transition-opacity duration-[var(--dur-fast)] hover:opacity-60"
+                      className="inline-flex min-h-[24px] items-center text-sm transition-opacity duration-[var(--dur-fast)] hover:opacity-60"
                     >
                       {l.label}
                     </Link>
@@ -69,11 +69,11 @@ export function Footer() {
 
           <div className="col-span-4 md:col-span-3">
             <h2 className="mono-label mb-4 text-[var(--stage-muted)]">Contact</h2>
-            <ul className="space-y-2.5">
+            <ul className="space-y-1">
               <li>
                 <a
                   href={`mailto:${club.email}`}
-                  className="text-sm transition-opacity duration-[var(--dur-fast)] hover:opacity-60"
+                  className="inline-flex min-h-[24px] items-center text-sm transition-opacity duration-[var(--dur-fast)] hover:opacity-60"
                 >
                   {club.email}
                 </a>
@@ -84,7 +84,7 @@ export function Footer() {
                     href={s.href}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-sm transition-opacity duration-[var(--dur-fast)] hover:opacity-60"
+                    className="inline-flex min-h-[24px] items-center text-sm transition-opacity duration-[var(--dur-fast)] hover:opacity-60"
                   >
                     {s.label}
                   </a>

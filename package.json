@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prebuild": "node scripts/check-placeholders.mjs",
+    "check:placeholders": "node scripts/check-placeholders.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

@@ -50,7 +50,7 @@ export default async function ProjectPage({
 
           <div className="grid12 mt-8">
             <div className="col-span-4 md:col-span-8">
-              <Eyebrow>{project.sample ? "Sample entry" : project.hackathon}</Eyebrow>
+              <Eyebrow>{project.hackathon}</Eyebrow>
               <RevealLines
                 as="h1"
                 lines={project.title}
@@ -61,13 +61,6 @@ export default async function ProjectPage({
               </p>
             </div>
           </div>
-
-          {project.sample && (
-            <p className="rule-t mt-10 max-w-[62ch] pt-5 text-sm text-[var(--stage-muted)]">
-              This is a placeholder showing how a finished case study reads. It
-              is not a real project.
-            </p>
-          )}
         </div>
       </header>
 

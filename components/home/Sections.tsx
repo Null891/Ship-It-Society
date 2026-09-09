@@ -59,8 +59,8 @@ export function Stats() {
           stagger={0.07}
           className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4"
         >
-          {stats.map((s) => (
-            <StaggerItem key={s.label} className="rule-t pt-5">
+          {stats.map((s, i) => (
+            <StaggerItem index={i} key={s.label} className="rule-t pt-5">
               <dd className="text-3xl font-semibold tracking-[-0.03em]">
                 <CountUp value={s.value} suffix={s.suffix} />
               </dd>
@@ -125,10 +125,6 @@ export function Security() {
   );
 }
 
-function money(n: number) {
-  return n > 0 ? `$${n.toLocaleString("en-US")}` : "TBA";
-}
-
 /** Prizes. Numeric, tabular, no decoration. */
 export function Prizes() {
   return (
@@ -147,8 +143,9 @@ export function Prizes() {
             </p>
 
             <Stagger as="dl" className="mt-10">
-              {prizes.tiers.map((t) => (
+              {prizes.tiers.map((t, i) => (
                 <StaggerItem
+                  index={i}
                   key={t.place}
                   className="rule-t flex items-baseline justify-between gap-6 py-4"
                 >
@@ -158,13 +155,8 @@ export function Prizes() {
                     </span>
                     <span className="text-lg font-medium">{t.title}</span>
                   </span>
-                  <span className="flex items-baseline gap-4">
-                    <span className="hidden text-sm text-[var(--stage-muted)] sm:inline">
-                      {t.note}
-                    </span>
-                    <span className="tnum text-lg font-semibold">
-                      {money(t.amount)}
-                    </span>
+                  <span className="text-right text-base text-[var(--stage-muted)]">
+                    {t.note}
                   </span>
                 </StaggerItem>
               ))}
@@ -176,8 +168,8 @@ export function Prizes() {
               How it is judged
             </h3>
             <Stagger as="dl" className="mt-5">
-              {prizes.criteria.map((c) => (
-                <StaggerItem key={c.term} className="rule-t py-4">
+              {prizes.criteria.map((c, i) => (
+                <StaggerItem index={i} key={c.term} className="rule-t py-4">
                   <div className="flex items-baseline justify-between gap-4">
                     <dt className="text-base font-medium">{c.term}</dt>
                     {/* marigold-ink, not marigold: this is text on a light
@@ -217,8 +209,9 @@ export function SponsorRow() {
         </div>
 
         <Stagger as="ul" stagger={0.08} className="mt-8">
-          {sponsors.map((s) => (
+          {sponsors.map((s, i) => (
             <StaggerItem
+              index={i}
               as="li"
               key={s.name}
               className="rule-t grid grid-cols-1 gap-2 py-7 md:grid-cols-[minmax(0,300px)_1fr] md:items-baseline md:gap-10"

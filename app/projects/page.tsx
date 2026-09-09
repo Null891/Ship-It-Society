@@ -29,17 +29,51 @@ export default function ProjectsPage() {
       <section className="pt-16 md:pt-24">
         <div className="edge">
           {projects.length === 0 ? (
-            <p className="rule-t max-w-[46ch] pt-8 text-lg text-[var(--stage-muted)]">
-              {projectsPage.empty}
-            </p>
+            /* A designed state, not a gap. The archive is empty because the
+               first cycle has not finished — say so, and give the reader the
+               next thing to do instead of a dead end. */
+            <div className="rule-t grid12 pt-8">
+              <div className="col-span-4 md:col-span-2">
+                <span
+                  aria-hidden
+                  className="mono-label block text-[var(--stage-muted)]"
+                >
+                  {projectsPage.empty.index}
+                </span>
+                <span className="mono-label mt-2 block text-marigold-ink">
+                  {projectsPage.empty.label}
+                </span>
+              </div>
+
+              <div className="col-span-4 mt-6 md:col-span-7 md:col-start-4 md:mt-0">
+                <h2 className="optical text-2xl font-semibold tracking-[-0.028em]">
+                  {projectsPage.empty.headline}
+                </h2>
+                <p className="pretty mt-5 max-w-[52ch] text-lg text-[var(--stage-muted)]">
+                  {projectsPage.empty.body}
+                </p>
+                <Link
+                  href={projectsPage.empty.cta.href}
+                  className="mono-label group mt-8 inline-flex items-center gap-2 border-b border-[var(--stage-line)] pb-1 transition-colors duration-[var(--dur-fast)] hover:border-[currentColor]"
+                >
+                  {projectsPage.empty.cta.label}
+                  <span
+                    aria-hidden
+                    className="transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-expo)] group-hover:translate-x-1"
+                  >
+                    →
+                  </span>
+                </Link>
+              </div>
+            </div>
           ) : (
             <Stagger
               as="ul"
               stagger={0.08}
               className="grid grid-cols-1 gap-x-6 gap-y-14 md:grid-cols-2"
             >
-              {projects.map((p) => (
-                <StaggerItem as="li" key={p.slug}>
+              {projects.map((p, i) => (
+                <StaggerItem index={i} as="li" key={p.slug}>
                   <Link href={`/projects/${p.slug}`} className="group block">
                     <Morph name={`cover-${p.slug}`}>
                       <div
@@ -78,7 +112,7 @@ export default function ProjectsPage() {
                         {p.title}
                       </h2>
                       <span className="mono-label shrink-0 text-[var(--stage-muted)]">
-                        {p.sample ? "Sample" : p.hackathon}
+                        {p.hackathon}
                       </span>
                     </div>
                     <p className="pretty mt-2 max-w-[46ch] text-base text-[var(--stage-muted)]">
@@ -88,16 +122,6 @@ export default function ProjectsPage() {
                 </StaggerItem>
               ))}
             </Stagger>
-          )}
-
-          {projects.some((p) => p.sample) && (
-            <p className="rule-t mt-16 pt-5 text-sm text-[var(--stage-muted)]">
-              Entries marked <span className="mono-label">Sample</span> are
-              placeholders showing how a finished write-up reads. They are not
-              real projects. Remove them from{" "}
-              <span className="font-mono text-[13px]">content/projects.ts</span>{" "}
-              once the first hackathon has run.
-            </p>
           )}
         </div>
       </section>

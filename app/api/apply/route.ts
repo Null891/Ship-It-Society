@@ -12,6 +12,21 @@ function clientIp(req: Request): string {
 }
 
 export async function POST(req: Request) {
+  /* Rate limit FIRST, before parsing or validating.
+
+     This used to sit below the schema check, which meant a malformed body
+     returned 400 and never reached the limiter — so an attacker could hammer
+     this endpoint indefinitely as long as the payload stayed invalid. An
+     audit caught exactly that: twelve 400s in a row and not one 429. The
+     limiter has to be the first thing that runs, because the cheapest
+     request to send is the one that fails validation. */
+  if (!rateLimit(clientIp(req))) {
+    return NextResponse.json(
+      { ok: false, message: "That is a lot of applications. Try again shortly." },
+      { status: 429 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -38,13 +53,6 @@ export async function POST(req: Request) {
   // gets no signal that it was caught.
   if (parsed.data.company) {
     return NextResponse.json({ ok: true });
-  }
-
-  if (!rateLimit(clientIp(req))) {
-    return NextResponse.json(
-      { ok: false, message: "That is a lot of applications. Try again shortly." },
-      { status: 429 },
-    );
   }
 
   try {

@@ -31,7 +31,7 @@ export default function JoinPage() {
                 </h2>
                 <p className="mt-3 text-lg font-medium">{schedule.cadence}</p>
                 <p className="text-base text-[var(--stage-muted)]">
-                  {schedule.time} &middot; {schedule.room}
+                  {[schedule.time, schedule.room].filter(Boolean).join(" · ")}
                 </p>
               </div>
 

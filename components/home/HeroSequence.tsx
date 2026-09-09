@@ -11,7 +11,6 @@ import {
 } from "motion/react";
 import { drawFrame, STATIC_FRAME, type Palette } from "@/lib/sequence";
 import { hero } from "@/content/club";
-import { DUR, EASE_OUT_EXPO } from "@/lib/motion";
 import { usePrefersReducedMotion } from "@/lib/hooks";
 import { Grain } from "@/components/ui/Texture";
 
@@ -203,51 +202,51 @@ export function HeroSequence() {
           ref={titleRef}
           className="edge relative flex h-full flex-col justify-center"
         >
+          {/* These used Motion mount animations with initial={{opacity:0}},
+              which shipped opacity:0 in the server HTML and then relied on
+              requestAnimationFrame to bring it back. Browsers throttle rAF in
+              background tabs, so opening this page in a background tab left
+              the entire hero — eyebrow, headline, standfirst, both CTAs —
+              invisible indefinitely. It is now the same CSS reveal the rest
+              of the site uses: nothing is hidden unless html.anim is set, and
+              the boot script only sets that for a visible tab. */}
           <div>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: DUR.slow, ease: EASE_OUT_EXPO, delay: 0.06 }}
+            <p
+              data-reveal=""
+              style={{ "--reveal-i": 1 } as React.CSSProperties}
               className="mono-label mb-6 text-[var(--color-muted)]"
             >
               {hero.eyebrow}
-            </motion.p>
+            </p>
 
             <h1
               id="hero-title"
+              data-reveal-lines=""
               className="optical text-5xl font-semibold text-paper"
             >
               {hero.headline.map((line, i) => (
                 <span key={line} className="block overflow-hidden pb-[0.06em]">
-                  <motion.span
-                    className="block"
-                    initial={{ y: "108%" }}
-                    animate={{ y: "0%" }}
-                    transition={{
-                      duration: 0.9,
-                      ease: EASE_OUT_EXPO,
-                      delay: 0.1 + i * 0.08,
-                    }}
+                  <span
+                    className="reveal-line"
+                    style={{ "--reveal-i": i + 1 } as React.CSSProperties}
                   >
                     {line}
-                  </motion.span>
+                  </span>
                 </span>
               ))}
             </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: DUR.slow, ease: EASE_OUT_EXPO, delay: 0.26 }}
+            <p
+              data-reveal=""
+              style={{ "--reveal-i": 4 } as React.CSSProperties}
               className="pretty mt-7 max-w-[46ch] text-lg text-[#c7c7cc]"
             >
               {hero.standfirst}
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: DUR.slow, ease: EASE_OUT_EXPO, delay: 0.36 }}
+            <div
+              data-reveal=""
+              style={{ "--reveal-i": 6 } as React.CSSProperties}
               className="mt-10 flex flex-wrap items-center gap-3"
             >
               <Link
@@ -262,7 +261,7 @@ export function HeroSequence() {
               >
                 {hero.secondaryCta.label}
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
 

@@ -179,7 +179,15 @@ export function ApplyForm() {
         </div>
       </div>
 
-      <fieldset className="mt-8">
+      {/* aria-describedby goes on the fieldset so the error is announced with
+          the group, and aria-invalid on each input so the state is exposed
+          per control. Only name/email/why were wired before this. */}
+      <fieldset
+        className="mt-8"
+        role="radiogroup"
+        aria-invalid={!!errors.grade}
+        aria-describedby={errors.grade ? `${uid}-grade-err` : undefined}
+      >
         <legend className="mono-label pb-3">Grade</legend>
         <div className="flex flex-wrap gap-2">
           {GRADES.map((g) => (
@@ -200,7 +208,12 @@ export function ApplyForm() {
         <ErrorText id={`${uid}-grade-err`}>{errors.grade?.message}</ErrorText>
       </fieldset>
 
-      <fieldset className="mt-8">
+      <fieldset
+        className="mt-8"
+        role="radiogroup"
+        aria-invalid={!!errors.experience}
+        aria-describedby={errors.experience ? `${uid}-exp-err` : undefined}
+      >
         <legend className="mono-label pb-3">Coding experience</legend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {EXPERIENCE.map((e) => (

@@ -109,6 +109,16 @@
   --stage-muted: #6e6e73;
   --stage-line: #d2d2d7;
 
+  /* Nav chrome is deliberately NOT the page stage.
+     The page ramps smoothly from black to off-white, which means it spends a
+     stretch of scroll at mid-grey — and a mid-grey background cannot carry
+     either light or dark text at 4.5:1. Measured, the nav fell to 1.71:1
+     around y=3200 on the home page. So the nav gets its own pair that STEPS
+     between the two ends instead of interpolating through the middle, and it
+     is always legible. StageShift drives these alongside the page vars. */
+  --nav-bg: #f5f5f7;
+  --nav-fg: #1d1d1f;
+
   color-scheme: light;
 }
 
@@ -121,6 +131,9 @@
   --stage-fg: #f5f5f7;
   --stage-muted: #86868b;
   --stage-line: rgb(255 255 255 / 0.14);
+
+  --nav-bg: #000000;
+  --nav-fg: #f5f5f7;
 
   color-scheme: dark;
 }
@@ -297,6 +310,52 @@
 }
 
 /* ==========================================================================
+   Entry reveals — visible by default, animation layered on top.
+
+   This inverts the old contract. Previously the server rendered
+   opacity:0 / translateY(110%) and an IntersectionObserver was the ONLY way
+   to get it back, so a page opened in a background tab (or with JS off, or
+   restored from session) showed a permanently blank hero.
+
+   Now: nothing is hidden unless <html> carries .anim, and the pre-paint
+   script in app/layout.tsx only adds .anim when the tab is genuinely
+   visible, IntersectionObserver exists, and the user has not asked for
+   reduced motion. Every failure mode lands on "content is visible".
+
+   Because the hiding lives in CSS keyed off a class on <html>, the server
+   and client markup are identical — no hydration mismatch, and no inline
+   opacity in the SSR payload.
+   ========================================================================== */
+
+[data-reveal] {
+  transition:
+    opacity var(--dur-slow) var(--ease-out-expo),
+    transform var(--dur-slow) var(--ease-out-expo);
+  transition-delay: calc(var(--reveal-i, 0) * 60ms);
+}
+
+html.anim [data-reveal]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+/* Masked display lines. The mask is the parent's overflow; the line slides
+   up out of it. Note the observer is placed on the heading, never on the
+   line: a line translated 110% down sits outside its overflow:hidden parent,
+   and IntersectionObserver clips intersection by ancestor overflow, so
+   observing the line itself would deadlock — it would stay hidden because
+   it is hidden. */
+[data-reveal-lines] .reveal-line {
+  display: block;
+  transition: transform var(--dur-xslow) var(--ease-out-expo);
+  transition-delay: calc(var(--reveal-i, 0) * 80ms);
+}
+
+html.anim [data-reveal-lines]:not(.is-in) .reveal-line {
+  transform: translateY(110%);
+}
+
+/* ==========================================================================
    Reduced motion — every scroll effect must still show all content.
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
@@ -307,5 +366,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Belt and braces: even if .anim were somehow set, nothing stays hidden. */
+  html.anim [data-reveal]:not(.is-in),
+  html.anim [data-reveal-lines]:not(.is-in) .reveal-line {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
