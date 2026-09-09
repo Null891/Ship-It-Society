@@ -169,7 +169,6 @@ export function ApplyForm() {
             type="email"
             inputMode="email"
             autoComplete="email"
-            placeholder="you@example.com"
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? `${uid}-email-err` : undefined}
             className={fieldClasses(!!errors.email)}

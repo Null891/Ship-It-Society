@@ -22,9 +22,6 @@ const ALLOW = [
   // React's own attribute, and our styling hook for it.
   /placeholder[=:]/,
   /placeholder:text-/,
-  // The form's example email is illustrative input, shown greyed inside the
-  // field — it is not presented as the club's address.
-  /placeholder="you@example\.com"/,
   // Prose in comments explaining this very check.
   /check-placeholders/,
 ];
