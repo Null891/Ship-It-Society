@@ -4,7 +4,7 @@ import { RevealLines } from "@/components/motion/Reveal";
 import { WeekRow } from "@/components/home/WeekRow";
 
 /* ==========================================================================
-   The two-week format.
+   The one-month format.
 
    The section header is server-rendered; each week is a client component
    because its pinned card tracks scroll progress through its own days.

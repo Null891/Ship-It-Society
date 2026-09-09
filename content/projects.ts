@@ -13,7 +13,7 @@ export type Project = {
   tagline: string;
   hackathon: string;
   team: string[];
-  /** The two-week story, in three or four short paragraphs. */
+  /** The one-month story, in three or four short paragraphs. */
   story: string[];
   stack: string[];
   /** Open findings remaining at launch. Zero is the only acceptable number. */
@@ -37,7 +37,7 @@ export const projects: Project[] = [
     story: [
       "The district transport app covers the main routes and none of the shuttles. If your bus is one of the four it does not track, you stand outside and guess.",
       "The team scoped it down on day two to a single screen: pick your stop, see the next three arrivals. No accounts, no notifications, no map. Everything else was cut.",
-      "The security review flagged an exposed admin route left over from testing and a dependency with a known advisory. Both were cleared before the deploy on day thirteen.",
+      "The security review flagged an exposed admin route left over from testing and a dependency with a known advisory. Both were cleared before the deploy on day twenty-eight.",
     ],
     stack: ["Next.js", "TypeScript", "Postgres", "Vercel"],
     findings: 0,
@@ -54,8 +54,8 @@ export const projects: Project[] = [
     team: ["TODO", "TODO", "TODO"],
     story: [
       "Tutorial period is forty minutes and nobody knows which teachers have space. The information exists on paper, in a binder, in the front office.",
-      "One screen, one job: teachers mark themselves open or full, students see it live. The team spent day four through six on the realtime sync and nothing else.",
-      "The scan came back with an input validation gap on the teacher status endpoint. A student could have marked any room full. Fixed on day twelve, re-scanned clean.",
+      "One screen, one job: teachers mark themselves open or full, students see it live. The team spent day eight through twelve on the realtime sync and nothing else.",
+      "The scan came back with an input validation gap on the teacher status endpoint. A student could have marked any room full. Fixed on day twenty-four, re-scanned clean.",
     ],
     stack: ["React", "TypeScript", "Supabase"],
     findings: 0,

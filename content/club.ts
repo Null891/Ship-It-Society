@@ -23,7 +23,7 @@ export const club = {
 
 export const hero = {
   eyebrow: "Fremont High School",
-  headline: ["Two weeks.", "Idea to shipped."],
+  headline: ["One month.", "Idea to shipped."],
   standfirst:
     "A hackathon club where every project goes live. You build with AI-assisted tooling, pass a security review, and deploy to a real URL.",
   primaryCta: { label: "Apply to join", href: "/join" },
@@ -37,8 +37,8 @@ export const hero = {
    ------------------------------------------------------------------------- */
 
 export const stats = [
-  { value: 14, suffix: "", label: "Days per hackathon", detail: "Idea to deployed" },
-  { value: 2, suffix: "", label: "Weeks between meets", detail: "Officers run every event" },
+  { value: 30, suffix: "", label: "Days per hackathon", detail: "Idea to deployed" },
+  { value: 0, suffix: "", label: "Meetings scheduled", detail: "TBD" },
   { value: 100, suffix: "%", label: "Projects security tested", detail: "Before anything is public" },
   { value: 0, suffix: "", label: "Slide decks required", detail: "Ship a product, not a pitch" },
 ];
@@ -49,26 +49,26 @@ export const premise = {
   eyebrow: "The premise",
   headline: "Most clubs end in a slide deck. This one ends in a URL.",
   body: [
-    "Ship It Society runs on a two-week cycle. On day one you have an idea. On day fourteen it is deployed, security tested, and open to anyone with the link.",
+    "Ship It Society runs on a one-month cycle. On day one you have an idea. On day thirty it is deployed, security tested, and open to anyone with the link.",
     "You will use AI-assisted coding the way working engineers actually use it. Move faster through the parts that are already solved, and spend the time you save on the parts that are not.",
   ],
 };
 
-/* --- The two-week format --------------------------------------------------
+/* --- The one-month format -------------------------------------------------
    Rendered as a sticky pair: the week label pins while its days scroll past.
    Keep each day to one line.
    ------------------------------------------------------------------------- */
 
 export const format = {
   eyebrow: "The format",
-  headline: "Fourteen days, start to finish.",
+  headline: "Thirty days, start to finish.",
   standfirst:
     "The schedule is fixed, so the scope has to flex. You cut features to hit the date. That constraint is the whole point.",
   weeks: [
     {
       id: "week-01",
       label: "Week 01",
-      title: "Build",
+      title: "Scope",
       summary: "Decide fast, then make something that runs.",
       days: [
         {
@@ -77,14 +77,9 @@ export const format = {
           body: "Teams form, ideas get pitched in ninety seconds, scope gets cut in half.",
         },
         {
-          day: "Day 2-3",
+          day: "Day 2-6",
           title: "Spec",
           body: "One page. What it does, who it is for, and what you are deliberately not building.",
-        },
-        {
-          day: "Day 4-6",
-          title: "Core build",
-          body: "The single feature the product cannot exist without. Nothing else yet.",
         },
         {
           day: "Day 7",
@@ -96,31 +91,57 @@ export const format = {
     {
       id: "week-02",
       label: "Week 02",
-      title: "Ship",
-      summary: "Harden it, prove it is safe, put it on the internet.",
+      title: "Build",
+      summary: "The core product, working end to end.",
       days: [
         {
-          day: "Day 8-10",
+          day: "Day 8-13",
+          title: "Core build",
+          body: "The single feature the product cannot exist without. Nothing else yet.",
+        },
+        {
+          day: "Day 14",
+          title: "Checkpoint",
+          body: "Feature complete and demoable locally. Scope locks here.",
+        },
+      ],
+    },
+    {
+      id: "week-03",
+      label: "Week 03",
+      title: "Harden",
+      summary: "Fill in, then prove it is safe.",
+      days: [
+        {
+          day: "Day 15-20",
           title: "Fill in",
           body: "The second and third features, if and only if the first one holds.",
         },
         {
-          day: "Day 11",
+          day: "Day 21",
           title: "Security review",
           body: "A scan runs against the build. Findings come back as a list you have to clear.",
         },
+      ],
+    },
+    {
+      id: "week-04",
+      label: "Week 04",
+      title: "Ship",
+      summary: "Fix it, put it on the internet, show it.",
+      days: [
         {
-          day: "Day 12",
+          day: "Day 22-24",
           title: "Fix and re-scan",
           body: "Nothing ships with open findings. Run it again until it comes back clean.",
         },
         {
-          day: "Day 13",
+          day: "Day 25-28",
           title: "Deploy",
           body: "Live URL, real users. It exists outside your laptop now.",
         },
         {
-          day: "Day 14",
+          day: "Day 29-30",
           title: "Demo",
           body: "Five minutes in front of the room. Judges use the product, not the deck.",
         },
@@ -179,16 +200,16 @@ export const prizes = {
    ------------------------------------------------------------------------- */
 
 export const schedule = {
-  cadence: "Every other Wednesday", // TODO: confirm the day
-  time: "3:30 - 5:00 PM", // TODO: confirm the time
-  room: "Room TBD", // TODO: confirm the room
-  nextMeeting: "2026-09-23T15:30:00-07:00", // TODO: real date
-  nextHackathonDeadline: "2026-10-07T23:59:00-07:00", // TODO: real date
+  cadence: "TBD", // TODO: confirm the day
+  time: "TBD", // TODO: confirm the time
+  room: "TBD", // TODO: confirm the room
+  nextMeeting: "", // TODO: real date, meetings TBD
+  nextHackathonDeadline: "2026-10-23T23:59:00-07:00", // TODO: real date
   nextHackathonName: "Hackathon 01", // TODO: name it
   season: [
-    { name: "Hackathon 01", window: "Sep 23 - Oct 7", status: "upcoming" as const }, // TODO
-    { name: "Hackathon 02", window: "Oct 21 - Nov 4", status: "planned" as const }, // TODO
-    { name: "Hackathon 03", window: "Nov 18 - Dec 2", status: "planned" as const }, // TODO
+    { name: "Hackathon 01", window: "Sep 23 - Oct 23", status: "upcoming" as const }, // TODO
+    { name: "Hackathon 02", window: "Oct 28 - Nov 28", status: "planned" as const }, // TODO
+    { name: "Hackathon 03", window: "Dec 2 - Jan 2", status: "planned" as const }, // TODO
   ],
 };
 
@@ -226,7 +247,7 @@ export const join = {
   eyebrow: "Join",
   headline: "No experience required. Effort is.",
   standfirst:
-    "You do not need to have built anything before. You do need to show up for two weeks and finish what you start.",
+    "You do not need to have built anything before. You do need to show up for one month and finish what you start.",
   points: [
     "Open to every grade.",
     "No application fee and no prerequisites.",

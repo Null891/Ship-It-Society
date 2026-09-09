@@ -10,7 +10,7 @@ import { prizes, schedule, security } from "@/content/club";
 export const metadata: Metadata = {
   title: "The format",
   description:
-    "Two weeks, idea to deployed. The schedule is fixed so the scope has to flex.",
+    "One month, idea to deployed. The schedule is fixed so the scope has to flex.",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -24,8 +24,8 @@ export default function HackathonsPage() {
     <>
       <PageHeader
         eyebrow="Hackathons"
-        title={["Two weeks.", "Idea to shipped."]}
-        standfirst="Every hackathon runs the same fourteen days. Officers run each one end to end, and the deadline never moves."
+        title={["One month.", "Idea to shipped."]}
+        standfirst="Every hackathon runs the same thirty days. Officers run each one end to end, and the deadline never moves."
       />
 
       <Format />

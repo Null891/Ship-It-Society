@@ -34,6 +34,14 @@ export const sponsors: Sponsor[] = [
     logo: "", // TODO: /brand/argosx.svg
     tier: "founding",
   },
+  {
+    name: "boot.dev",
+    blurb: "Backend development courses. Practical Python, Go, and servers members learn by building.",
+    contribution: "Learning resources for members and part of the prize pool.",
+    url: "https://www.boot.dev",
+    logo: "", // TODO: /brand/bootdev.svg
+    tier: "supporting",
+  },
 ];
 
 export const sponsorPage = {

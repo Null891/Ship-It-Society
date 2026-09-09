@@ -39,12 +39,16 @@ function buildGraph() {
   ];
 
   // Only advertise the hackathon while it is still ahead of us.
-  if (new Date(schedule.nextHackathonDeadline).getTime() > Date.now()) {
+  // Meetings are TBD, so the event needs both a meeting start and a deadline.
+  if (
+    new Date(schedule.nextHackathonDeadline).getTime() > Date.now() &&
+    new Date(schedule.nextMeeting).getTime() > Date.now()
+  ) {
     graph.push({
       "@type": "Event",
       name: `${club.name} — ${schedule.nextHackathonName}`,
       description:
-        "A two-week hackathon: idea to deployed, security tested before launch.",
+        "A one-month hackathon: idea to deployed, security tested before launch.",
       startDate: schedule.nextMeeting,
       endDate: schedule.nextHackathonDeadline,
       eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
