@@ -256,7 +256,8 @@ const toneAlpha: Record<Tone, number> = {
 
 const PHASE = {
   gridIn: [0.0, 0.08],
-  cursor: [0.0, 0.16],
+  cursorIn: [0.05, 0.11],
+  cursorOut: [0.13, 0.2],
   codeIn: [0.12, 0.34],
   gridOut: [0.3, 0.44],
   morph: [0.34, 0.58],
@@ -579,15 +580,30 @@ export function drawFrame(
   const cx = L.focus.x + L.focus.w / 2;
   const cy = L.focus.y + L.focus.h / 2;
 
+  /* The grid starts partly present rather than at zero.
+
+     It used to fade in from nothing across the first 8% while the cursor was
+     already at full opacity, so the very first frame — the one everybody
+     sees — was a single marigold rectangle alone on black. It read as a
+     rendering artifact rather than a cursor waiting in an empty file. A
+     floor of 0.38 gives it a field to sit in from the first paint, and the
+     rest of the fade still does its work. */
   const gridAlpha =
-    seg(prog, PHASE.gridIn[0], PHASE.gridIn[1]) *
+    (0.38 + 0.62 * seg(prog, PHASE.gridIn[0], PHASE.gridIn[1])) *
     (1 - seg(prog, PHASE.gridOut[0], PHASE.gridOut[1]));
   const codeT = seg(prog, PHASE.codeIn[0], PHASE.codeIn[1]);
   const morphT = seg(prog, PHASE.morph[0], PHASE.morph[1]);
   const frameT = seg(prog, PHASE.frameIn[0], PHASE.frameIn[1]);
   const scanT = seg(prog, PHASE.scan[0], PHASE.scan[1]);
   const deployT = seg(prog, PHASE.deploy[0], PHASE.deploy[1]);
-  const cursorAlpha = 1 - seg(prog, PHASE.cursor[0], PHASE.cursor[1]);
+  /* The cursor fades IN as the headline fades out, rather than starting at
+     full opacity on the first frame. It sits at the code panel's origin,
+     which is directly behind the headline, so at p=0 it read as a stray
+     marigold block sitting on the type. Now the opening frame is the empty
+     grid alone, and the cursor arrives once it has the stage to itself. */
+  const cursorAlpha =
+    seg(prog, PHASE.cursorIn[0], PHASE.cursorIn[1]) *
+    (1 - seg(prog, PHASE.cursorOut[0], PHASE.cursorOut[1]));
   const scanY =
     scanT > 0 && scanT < 1 ? L.win.y + L.win.h * easeInOutCubic(scanT) : 0;
 
