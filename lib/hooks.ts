@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 /* ==========================================================================
    External-store hooks.
@@ -67,4 +67,42 @@ const getClockServer = () => 0;
 
 export function useNow(): number {
   return useSyncExternalStore(subscribeClock, getClock, getClockServer);
+}
+
+/* --- Run gate -------------------------------------------------------------
+   Every continuous animation on the site (the marquee, the dials, the grain)
+   goes through this. It returns true only while the element is on screen AND
+   the tab is visible.
+
+   Members open this on school Chromebooks. A ticker that keeps running in a
+   background tab, or three dials spinning far below the fold, is battery
+   spent on something nobody is looking at. Reduced motion pins it to false,
+   which is also the server value — so nothing loops before hydration.
+   ------------------------------------------------------------------------ */
+
+export function useRunWhenVisible<T extends Element>() {
+  const ref = useRef<T>(null);
+  const reduced = usePrefersReducedMotion();
+  const [onScreen, setOnScreen] = useState(false);
+  const [tabVisible, setTabVisible] = useState(true);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([e]) => setOnScreen(e.isIntersecting),
+      { rootMargin: "120px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const onVis = () => setTabVisible(document.visibilityState === "visible");
+    onVis();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  return { ref, running: !reduced && onScreen && tabVisible };
 }

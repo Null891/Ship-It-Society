@@ -356,6 +356,49 @@ html.anim [data-reveal-lines]:not(.is-in) .reveal-line {
 }
 
 /* ==========================================================================
+   Poster layer — barcode bars, drawn schematic lines, hairline grid.
+   Decorative only. None of it carries meaning a reader needs.
+   ========================================================================== */
+
+/* Barcode bars scale up from the baseline, left to right. */
+.barcode-bar {
+  transform-origin: center bottom;
+  transition: transform var(--dur-slow) var(--ease-out-expo);
+  transition-delay: calc(var(--bar-i, 0) * 9ms);
+}
+html.anim [data-reveal]:not(.is-in) .barcode-bar {
+  transform: scaleY(0.06);
+}
+
+/* Schematic strokes draw themselves. pathLength="1" on the element makes the
+   dash maths independent of the actual path length, so one rule covers every
+   shape without measuring it. */
+.draw-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--dur-xslow) var(--ease-out-expo);
+  transition-delay: calc(var(--draw-i, 0) * 90ms);
+}
+html.anim [data-reveal]:not(.is-in) .draw-path,
+html.anim [data-reveal-lines]:not(.is-in) .draw-path {
+  stroke-dashoffset: 1;
+}
+
+/* The exposed grid: hairline columns behind a section, as on a spec sheet. */
+@utility grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--stage-line) 0 1px,
+    transparent 1px 100%
+  );
+  background-size: calc(100% / 6) 100%;
+  opacity: 0.4;
+}
+
+/* ==========================================================================
    Reduced motion — every scroll effect must still show all content.
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
@@ -373,5 +416,14 @@ html.anim [data-reveal-lines]:not(.is-in) .reveal-line {
   html.anim [data-reveal-lines]:not(.is-in) .reveal-line {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* Poster marks rest in their finished state rather than their start state. */
+  html.anim [data-reveal]:not(.is-in) .barcode-bar {
+    transform: none !important;
+  }
+  html.anim [data-reveal]:not(.is-in) .draw-path,
+  html.anim [data-reveal-lines]:not(.is-in) .draw-path {
+    stroke-dashoffset: 0 !important;
   }
 }

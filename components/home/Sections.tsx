@@ -2,6 +2,7 @@ import Link from "next/link";
 import { premise, prizes, security, stats, join } from "@/content/club";
 import { sponsors } from "@/content/sponsors";
 import { Eyebrow } from "@/components/ui/Button";
+import { Annotation, Marquee, RegMark } from "@/components/ui/Poster";
 import { Grain } from "@/components/ui/Texture";
 import {
   CountUp,
@@ -23,16 +24,17 @@ import {
  *  block reads as composed rather than centred. */
 export function Premise() {
   return (
-    <section className="pt-28 md:pt-44">
+    <section className="pt-28 md:pt-44" aria-labelledby="premise-title">
       <div className="edge">
         <div className="grid12">
           <div className="col-span-4 md:col-span-9">
-            <Eyebrow>{premise.eyebrow}</Eyebrow>
+            <Eyebrow index={1}>{premise.eyebrow}</Eyebrow>
             <RevealLines
               lines={[
                 "Most clubs end in a slide deck.",
                 "This one ends in a URL.",
               ]}
+              id="premise-title"
               className="optical balance mt-5 text-4xl font-semibold"
             />
           </div>
@@ -82,7 +84,7 @@ export function Security() {
       <div className="edge">
         <div className="grid12 items-start">
           <div className="col-span-4 md:col-span-5">
-            <Eyebrow>{security.eyebrow}</Eyebrow>
+            <Eyebrow index={4}>{security.eyebrow}</Eyebrow>
             <RevealLines
               lines={security.headline}
               id="security-title"
@@ -132,7 +134,7 @@ export function Prizes() {
       <div className="edge">
         <div className="grid12">
           <div className="col-span-4 md:col-span-6">
-            <Eyebrow>{prizes.eyebrow}</Eyebrow>
+            <Eyebrow index={5}>{prizes.eyebrow}</Eyebrow>
             <RevealLines
               lines={["Sponsor-funded.", "Paid in cash."]}
               id="prizes-title"
@@ -226,6 +228,21 @@ export function SponsorRow() {
           ))}
         </Stagger>
       </div>
+
+      {/* The repeating top rail from the reference posters, running the full
+          bleed. Speed and direction follow scroll velocity, so it reads as
+          part of the page's movement rather than a detached loop. The names
+          are already listed above, so this is presentational. */}
+      <div className="rule-t rule-b mt-14 py-4">
+        <Marquee className="text-[var(--stage-muted)]" baseSpeed={26} gap={40}>
+          {[...sponsors, ...sponsors].map((s, i) => (
+            <span key={`${s.name}-${i}`} className="flex items-center gap-4">
+              <RegMark size={11} className="opacity-45" />
+              <Annotation tone="current">{s.name}</Annotation>
+            </span>
+          ))}
+        </Marquee>
+      </div>
     </section>
   );
 }
@@ -237,7 +254,7 @@ export function JoinCta() {
       <div className="edge">
         <div className="grid12">
           <div className="col-span-4 md:col-span-8">
-            <Eyebrow>{join.eyebrow}</Eyebrow>
+            <Eyebrow index={8}>{join.eyebrow}</Eyebrow>
             <RevealLines
               lines={["No experience required.", "Effort is."]}
               id="join-title"

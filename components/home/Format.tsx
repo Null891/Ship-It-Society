@@ -12,13 +12,18 @@ import { WeekRow } from "@/components/home/WeekRow";
 
 export function Format() {
   return (
-    <section id="format" className="pt-28 md:pt-40">
+    <section
+      id="format"
+      className="pt-28 md:pt-40"
+      aria-labelledby="format-title"
+    >
       <div className="edge">
         <div className="grid12">
           <div className="col-span-4 md:col-span-7">
-            <Eyebrow>{format.eyebrow}</Eyebrow>
+            <Eyebrow index={3}>{format.eyebrow}</Eyebrow>
             <RevealLines
               lines={format.headline}
+              id="format-title"
               className="optical mt-5 text-3xl font-semibold"
             />
             <p className="pretty mt-6 max-w-[52ch] text-lg text-[var(--stage-muted)]">

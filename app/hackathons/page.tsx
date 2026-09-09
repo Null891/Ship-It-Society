@@ -35,7 +35,7 @@ export default function HackathonsPage() {
         <div className="edge">
           <div className="flex flex-wrap items-baseline justify-between gap-4">
             <div>
-              <Eyebrow>This season</Eyebrow>
+              <Eyebrow index={2}>This season</Eyebrow>
               <h2
                 id="season-title"
                 className="optical mt-4 text-2xl font-semibold tracking-[-0.028em]"
@@ -80,7 +80,7 @@ export default function HackathonsPage() {
         <div className="edge">
           <div className="grid12 items-start">
             <div className="col-span-4 md:col-span-5">
-              <Eyebrow>Judging</Eyebrow>
+              <Eyebrow index={3}>Judging</Eyebrow>
               <h2
                 id="judging-title"
                 className="optical mt-4 text-3xl font-semibold"

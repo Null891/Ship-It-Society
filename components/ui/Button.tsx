@@ -71,12 +71,27 @@ export function Button({
 export function Eyebrow({
   children,
   className = "",
+  index,
 }: {
   children: React.ReactNode;
   className?: string;
+  /** Section number. Renders the poster's "01 /" index before the label. */
+  index?: number;
 }) {
   return (
-    <p className={`mono-label text-[var(--stage-muted)] ${className}`}>
+    <p
+      className={`mono-label flex items-center gap-2.5 text-[var(--stage-muted)] ${className}`}
+    >
+      {index !== undefined && (
+        <>
+          {/* The numbered index from the reference posters. Decorative: the
+              label beside it already says what the section is. */}
+          <span aria-hidden className="text-marigold-ink">
+            {String(index).padStart(2, "0")}
+          </span>
+          <span aria-hidden className="h-px w-6 bg-[var(--stage-line)]" />
+        </>
+      )}
       {children}
     </p>
   );

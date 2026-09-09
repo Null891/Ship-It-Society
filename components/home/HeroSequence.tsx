@@ -13,6 +13,7 @@ import { drawFrame, STATIC_FRAME, type Palette } from "@/lib/sequence";
 import { hero } from "@/content/club";
 import { usePrefersReducedMotion } from "@/lib/hooks";
 import { Grain } from "@/components/ui/Texture";
+import { Annotation, Barcode, Dial, RegMark, Scramble } from "@/components/ui/Poster";
 
 /* ==========================================================================
    The hero.
@@ -197,6 +198,58 @@ export function HeroSequence() {
               "linear-gradient(to top, color-mix(in srgb, var(--color-ink) 88%, transparent), transparent)",
           }}
         />
+
+        {/* --- Poster furniture ------------------------------------------
+            Spec-sheet marginalia pinned to the corners of the stage. These
+            label the sequence the way a technical poster labels a diagram:
+            an index, a scale, a registration mark, a barcode. All decorative
+            and aria-hidden — the page reads identically without them. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 hidden text-[var(--color-muted)] md:block"
+        >
+          <div className="edge relative h-full">
+            {/* top-left: the section index and a live spec line */}
+            <div className="absolute left-[24px] top-[104px] flex items-start gap-4 md:left-[40px] xl:left-[56px]">
+              <RegMark size={16} className="mt-[2px] text-marigold" />
+              <div>
+                <Annotation tone="current" className="block">
+                  01 / Sequence
+                </Annotation>
+                {/* Resolves out of noise once, like a readout coming online.
+                    The real string is in the DOM from the first byte and is
+                    what assistive tech reads — the scramble only ever
+                    overwrites it for a beat. */}
+                <Annotation tone="current" className="mt-1 block opacity-60">
+                  <Scramble text="30D · IDEA TO DEPLOYED" duration={1100} />
+                </Annotation>
+              </div>
+            </div>
+
+            {/* right: the dial, straight off the turntable poster */}
+            <div className="absolute right-[24px] top-1/2 -translate-y-1/2 md:right-[40px] xl:right-[56px]">
+              <Dial size={116} className="text-[var(--color-muted)] opacity-70" />
+            </div>
+
+            {/* bottom-left: barcode + build stamp */}
+            <div className="absolute bottom-[92px] left-[24px] md:left-[40px] xl:left-[56px]">
+              <Barcode seed="ship-it-society-01" bars={34} height={26} className="opacity-45" />
+              <Annotation tone="current" className="mt-2 block opacity-55">
+                FHS · SUNNYVALE CA
+              </Annotation>
+            </div>
+
+            {/* bottom-right: the vertical set label */}
+            <div className="absolute bottom-[92px] right-[24px] md:right-[40px] xl:right-[56px]">
+              <Annotation
+                tone="current"
+                className="block opacity-55 [writing-mode:vertical-rl]"
+              >
+                BUILD · TEST · SHIP
+              </Annotation>
+            </div>
+          </div>
+        </div>
 
         <div
           ref={titleRef}
