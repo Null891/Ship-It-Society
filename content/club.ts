@@ -174,7 +174,7 @@ export const prizes = {
 /* --- Schedule and countdown -----------------------------------------------
    ISO 8601 with an explicit offset. Pacific is -07:00 during daylight saving
    and -08:00 from early November to early March. The countdown reads
-   nextHackathonDeadline first and falls back to nextMeeting. Dates in the
+   nextMeeting first and falls back to nextHackathonDeadline. Dates in the
    past are hidden automatically, so a stale date degrades quietly.
    ------------------------------------------------------------------------- */
 

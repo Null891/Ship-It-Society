@@ -9,7 +9,7 @@ import { Grain } from "@/components/ui/Texture";
 /* ==========================================================================
    Countdown.
 
-   Reads the hackathon deadline first, then the next meeting. A date in the
+   Reads the next meeting first, then the hackathon deadline. A date in the
    past is skipped rather than shown as a negative, so a stale content file
    degrades quietly instead of embarrassingly.
 
@@ -23,14 +23,14 @@ type Target = { label: string; iso: string; note: string };
 function pickTarget(now: number): Target | null {
   const candidates: Target[] = [
     {
-      label: schedule.nextHackathonName,
-      iso: schedule.nextHackathonDeadline,
-      note: "Deadline to ship",
-    },
-    {
       label: "Next meeting",
       iso: schedule.nextMeeting,
       note: `${schedule.cadence} · ${schedule.room}`,
+    },
+    {
+      label: schedule.nextHackathonName,
+      iso: schedule.nextHackathonDeadline,
+      note: "Deadline to ship",
     },
   ];
   return candidates.find((c) => new Date(c.iso).getTime() > now) ?? null;
