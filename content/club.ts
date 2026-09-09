@@ -207,13 +207,25 @@ export type Officer = {
 
 export const officers: Officer[] = [
   {
-    name: "TODO", // TODO: your name
+    name: "Nikhil Nagaraj",
     role: "Co-founder",
     bio: "TODO: one sentence. What you build, or why you started this.",
     image: "",
   },
   {
-    name: "Pinakin", // TODO: full name
+    name: "Pinakin Joshi",
+    role: "Co-founder",
+    bio: "TODO: one sentence.",
+    image: "",
+  },
+  {
+    name: "Derrick Chien",
+    role: "Co-founder",
+    bio: "TODO: one sentence.",
+    image: "",
+  },
+  {
+    name: "Abhinava Sivakumaran",
     role: "Co-founder",
     bio: "TODO: one sentence.",
     image: "",
