@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
-import { useAnimationFrame, useScroll, useVelocity } from "motion/react";
+import {
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+  useScroll,
+  useSpring,
+  useTransform,
+  useVelocity,
+} from "motion/react";
 import { useRunWhenVisible, usePrefersReducedMotion } from "@/lib/hooks";
 import { Barcode, RegMark } from "@/components/ui/Poster";
 import { Grain } from "@/components/ui/Texture";
@@ -71,6 +79,10 @@ function CropMarks() {
   );
 }
 
+/** Maximum tilt toward the pointer, in degrees. Enough to read as physical,
+ *  not enough to distort the composition. */
+const TILT = 3;
+
 export function PlateFrame({
   ground,
   index,
@@ -81,6 +93,7 @@ export function PlateFrame({
   aspectClass,
   label,
   running = false,
+  interactive = true,
   children,
 }: {
   ground: Ground;
@@ -99,60 +112,166 @@ export function PlateFrame({
   label?: string;
   /** Drives CSS play-state for the plate's looping marks. */
   running?: boolean;
+  /** Reticle and tilt on hover. Mouse only; off under reduced motion. */
+  interactive?: boolean;
   children: React.ReactNode;
 }) {
+  const reduced = usePrefersReducedMotion();
+  const figureRef = useRef<HTMLElement>(null);
+  const reticleRef = useRef<HTMLDivElement>(null);
+  const readoutRef = useRef<HTMLSpanElement>(null);
+
+  /* The reticle follows the pointer on a stiff spring, so it trails by a
+     frame or two like an instrument settling, and the plate leans a few
+     degrees toward it on a softer one. Every write goes to a MotionValue or
+     straight to the DOM — no React state changes while the pointer moves. */
+  const px = useMotionValue(0);
+  const py = useMotionValue(0);
+  const nx = useMotionValue(0.5);
+  const ny = useMotionValue(0.5);
+  const sx = useSpring(px, { stiffness: 520, damping: 44, mass: 0.35 });
+  const sy = useSpring(py, { stiffness: 520, damping: 44, mass: 0.35 });
+  const rotateX = useSpring(useTransform(ny, [0, 1], [TILT, -TILT]), {
+    stiffness: 170,
+    damping: 20,
+  });
+  const rotateY = useSpring(useTransform(nx, [0, 1], [-TILT, TILT]), {
+    stiffness: 170,
+    damping: 20,
+  });
+
+  const track = (e: React.PointerEvent, enter: boolean) => {
+    if (!interactive || reduced || e.pointerType !== "mouse") return;
+    const fig = figureRef.current;
+    if (!fig) return;
+    // Measure the figure, not the tilted plate: the figure's box is never
+    // transformed by the tilt, so the coordinates stay exact.
+    const r = fig.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+    const fx = r.width ? x / r.width : 0.5;
+    const fy = r.height ? y / r.height : 0.5;
+    if (enter) {
+      sx.jump(x);
+      sy.jump(y);
+    }
+    px.set(x);
+    py.set(y);
+    nx.set(fx);
+    ny.set(fy);
+
+    const reticle = reticleRef.current;
+    if (reticle) reticle.style.opacity = "1";
+    const readout = readoutRef.current;
+    if (readout) {
+      // A true readout: where the pointer sits on the plate, 0 to 1.
+      readout.textContent = "X " + fx.toFixed(2) + " · Y " + fy.toFixed(2);
+      // Flip to the other side near the right and bottom edges.
+      const flipX = fx > 0.66 ? "calc(-100% - 36px)" : "0px";
+      const flipY = fy > 0.78 ? "calc(-100% - 36px)" : "0px";
+      readout.style.transform = "translate(" + flipX + ", " + flipY + ")";
+    }
+  };
+
+  const release = () => {
+    nx.set(0.5);
+    ny.set(0.5);
+    if (reticleRef.current) reticleRef.current.style.opacity = "0";
+  };
+
   const a11y = label
     ? ({ role: "img", "aria-label": label } as const)
     : ({ "aria-hidden": true } as const);
 
   return (
-    <figure data-reveal className="relative m-0" {...a11y}>
+    <figure
+      ref={figureRef}
+      data-reveal
+      className="relative m-0 [perspective:1400px]"
+      {...a11y}
+    >
+      {/* Crop marks sit outside the tilt, so they stay put while the plate
+          leans — the registration reads against the movement. */}
       <CropMarks />
-      <div
-        className={`plate plate-${ground} ${aspectClass}`}
-        data-running={running ? "true" : "false"}
+      <motion.div
+        className="relative"
+        style={{ rotateX, rotateY }}
+        onPointerEnter={(e) => track(e, true)}
+        onPointerMove={(e) => track(e, false)}
+        onPointerLeave={release}
       >
-        <div className="absolute inset-0 z-[1]">{children}</div>
+        <div
+          className={`plate plate-${ground} ${aspectClass}`}
+          data-running={running ? "true" : "false"}
+        >
+          <div className="absolute inset-0 z-[1]">{children}</div>
 
-        {/* Grain sits over the art, like tooth on a print. */}
-        <div className="pointer-events-none absolute inset-0 z-[1]">
-          <Grain
-            opacity={ground === "ink" ? 0.06 : 0.1}
-            blend={ground === "ink" ? "screen" : "multiply"}
-          />
-        </div>
+          {/* Grain sits over the art, like tooth on a print. */}
+          <div className="pointer-events-none absolute inset-0 z-[1]">
+            <Grain
+              opacity={ground === "ink" ? 0.06 : 0.1}
+              blend={ground === "ink" ? "screen" : "multiply"}
+            />
+          </div>
 
-        {/* Rails. Labels are chips so they stay legible over whatever art
-            happens to sit under them. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-[2] flex items-start justify-between gap-4 p-3 md:p-4">
-          <span className="mono-label inline-flex items-center gap-1.5 rounded-pill bg-[var(--plate-chip-bg)] py-1 pl-1.5 pr-2.5 text-[var(--plate-chip-fg)]">
-            <RegMark size={11} className="text-marigold" />
-            {index} / {title}
-          </span>
-          {meta && (
-            <span className="mono-label hidden pt-1 text-right text-[var(--plate-muted)] sm:block">
-              {meta}
-            </span>
-          )}
-        </div>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex items-end justify-between gap-4 p-3 md:p-4">
-          {footer ? (
-            <span
-              className={`mono-label rounded-pill bg-[var(--plate-chip-bg)] px-2.5 py-1 text-[var(--plate-chip-fg)] ${footerFromSm ? "hidden sm:inline-flex" : "inline-flex"}`}
+          {/* The reticle: a full-bleed crosshair, a target box and a readout. */}
+          {interactive && (
+            <div
+              ref={reticleRef}
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-[3] opacity-0 transition-opacity duration-[var(--dur-fast)]"
             >
-              {footer}
-            </span>
-          ) : (
-            <span />
+              <motion.span
+                className="absolute inset-x-0 top-0 block h-px bg-[var(--plate-reticle)] opacity-55"
+                style={{ y: sy }}
+              />
+              <motion.span
+                className="absolute inset-y-0 left-0 block w-px bg-[var(--plate-reticle)] opacity-55"
+                style={{ x: sx }}
+              />
+              <motion.span className="absolute left-0 top-0 block" style={{ x: sx, y: sy }}>
+                <span className="absolute -left-3 -top-3 block h-6 w-6 border border-[var(--plate-reticle)]" />
+                <span className="absolute -left-px -top-px block h-0.5 w-0.5 bg-[var(--plate-reticle)]" />
+                <span
+                  ref={readoutRef}
+                  className="mono-label absolute left-[18px] top-[18px] block whitespace-nowrap rounded-pill bg-[var(--plate-chip-bg)] px-2 py-0.5 text-[var(--plate-chip-fg)]"
+                />
+              </motion.span>
+            </div>
           )}
-          <Barcode
-            seed={`${index}-${title}`}
-            bars={18}
-            height={16}
-            className="hidden shrink-0 opacity-80 sm:block"
-          />
+
+          {/* Rails. Labels are chips so they stay legible over whatever art
+              happens to sit under them. */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[2] flex items-start justify-between gap-4 p-3 md:p-4">
+            <span className="mono-label inline-flex items-center gap-1.5 rounded-pill bg-[var(--plate-chip-bg)] py-1 pl-1.5 pr-2.5 text-[var(--plate-chip-fg)]">
+              <RegMark size={11} className="text-marigold" />
+              {index} / {title}
+            </span>
+            {meta && (
+              <span className="mono-label hidden pt-1 text-right text-[var(--plate-muted)] sm:block">
+                {meta}
+              </span>
+            )}
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] flex items-end justify-between gap-4 p-3 md:p-4">
+            {footer ? (
+              <span
+                className={`mono-label rounded-pill bg-[var(--plate-chip-bg)] px-2.5 py-1 text-[var(--plate-chip-fg)] ${footerFromSm ? "hidden sm:inline-flex" : "inline-flex"}`}
+              >
+                {footer}
+              </span>
+            ) : (
+              <span />
+            )}
+            <Barcode
+              seed={`${index}-${title}`}
+              bars={18}
+              height={16}
+              className="hidden shrink-0 opacity-80 sm:block"
+            />
+          </div>
         </div>
-      </div>
+      </motion.div>
     </figure>
   );
 }
@@ -219,7 +338,7 @@ export function EuclidPlate({ className = "" }: { className?: string }) {
     <div ref={hostRef} className={className}>
       <PlateFrame
         ground="stone"
-        index="04"
+        index="P.02"
         title="Review plate"
         meta={`ArgosX · ${security.checks.length} checks`}
         footer="Ships at 0 findings"
@@ -390,7 +509,7 @@ export function OrbitPlate({ className = "" }: { className?: string }) {
     <div ref={runRef} className={className}>
       <PlateFrame
         ground="ink"
-        index="02"
+        index="P.03"
         title="Season plate"
         meta={`Season ${seasonSpan()}`}
         footer={`${cycles.length} cycles`}
@@ -508,21 +627,83 @@ const PIXELS = [...WORD].flatMap((ch, k) =>
   ),
 );
 
+/** How far the pointer's light reaches across the pixel grid, in viewBox units. */
+const GLOW_RADIUS = 96;
+
 export function ArchivePlate({ className = "" }: { className?: string }) {
   const { ref: runRef, running } = useRunWhenVisible<HTMLDivElement>();
   const shipped = String(projects.length).padStart(3, "0");
+  const reduced = usePrefersReducedMotion();
+
+  /* Pointer proximity, as on a node canvas: the pixels nearest the cursor
+     light up in paper and fall off with distance. A separate glow layer
+     sits over the word so these writes never fight the reveal's per-column
+     transition delays. Painting is coalesced to one frame per pointer burst,
+     and nothing runs for touch or reduced motion. */
+  const hostRef = useRef<HTMLDivElement>(null);
+  const glowRefs = useRef<(SVGRectElement | null)[]>([]);
+  const target = useRef<{ x: number; y: number } | null>(null);
+  const frame = useRef(0);
+
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
+
+  const paintGlow = () => {
+    frame.current = 0;
+    const t = target.current;
+    PIXELS.forEach((px, i) => {
+      const el = glowRefs.current[i];
+      if (!el) return;
+      if (!t) {
+        el.style.opacity = "0";
+        return;
+      }
+      const cx = X0 + px.col * PITCH + SQUARE / 2;
+      const cy = Y0 + px.row * PITCH + SQUARE / 2;
+      const k = Math.max(0, 1 - Math.hypot(cx - t.x, cy - t.y) / GLOW_RADIUS);
+      el.style.opacity = String(Math.round(k * k * 100) / 100);
+    });
+  };
+
+  const schedule = () => {
+    if (!frame.current) frame.current = requestAnimationFrame(paintGlow);
+  };
+
+  const onGlowMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (reduced || e.pointerType !== "mouse" || !hostRef.current) return;
+    const r = hostRef.current.getBoundingClientRect();
+    // The SVG uses "meet": uniform scale, centred with letterbox margins.
+    const scale = Math.min(r.width / 1200, r.height / 440) || 1;
+    const offX = (r.width - 1200 * scale) / 2;
+    const offY = (r.height - 440 * scale) / 2;
+    target.current = {
+      x: (e.clientX - r.left - offX) / scale,
+      y: (e.clientY - r.top - offY) / scale,
+    };
+    schedule();
+  };
+
+  const onGlowLeave = () => {
+    target.current = null;
+    schedule();
+  };
 
   return (
     <div ref={runRef} className={className}>
       <PlateFrame
         ground="marigold"
-        index="01"
+        index="P.04"
         title="Archive plate"
         meta={`${COLS} × ${String(ROWS).padStart(2, "0")} grid`}
         footer={`${shipped} deployments on record`}
         aspectClass="aspect-[16/10] sm:aspect-[30/11]"
         running={running}
       >
+        <div
+          ref={hostRef}
+          className="h-full w-full"
+          onPointerMove={onGlowMove}
+          onPointerLeave={onGlowLeave}
+        >
         <svg viewBox="0 0 1200 440" preserveAspectRatio="xMidYMid meet" className="h-full w-full">
           {/* Ruler: a tick per column, numbered every ten. */}
           <g stroke="var(--color-ink)">
@@ -574,6 +755,24 @@ export function ArchivePlate({ className = "" }: { className?: string }) {
             ))}
           </g>
 
+          {/* The pointer's light over the word. Invisible at rest. */}
+          <g fill="var(--color-paper)" aria-hidden>
+            {PIXELS.map((p, i) => (
+              <rect
+                key={`g-${p.col}-${p.row}`}
+                ref={(el) => {
+                  glowRefs.current[i] = el;
+                }}
+                x={X0 + p.col * PITCH}
+                y={Y0 + p.row * PITCH}
+                width={SQUARE}
+                height={SQUARE}
+                className="transition-opacity duration-[var(--dur-fast)]"
+                style={{ opacity: 0 }}
+              />
+            ))}
+          </g>
+
           {/* Cursor. */}
           <rect
             className="px-cursor"
@@ -611,6 +810,7 @@ export function ArchivePlate({ className = "" }: { className?: string }) {
             style={{ ["--scan-dist" as string]: `${WORD_W + 28}px` }}
           />
         </svg>
+        </div>
       </PlateFrame>
     </div>
   );
@@ -664,7 +864,7 @@ export function GatePlate({ className = "" }: { className?: string }) {
     <div ref={runRef} className={className}>
       <PlateFrame
         ground="ink"
-        index="05"
+        index="P.05"
         title="Signal plate"
         meta="Open · every grade"
         footer={`${meeting.room} · ${meeting.time}`.toUpperCase()}
