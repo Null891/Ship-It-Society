@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 !.env.example
+
+# Claude Code agent worktrees (throwaway checkouts with their own node_modules)
+.claude/worktrees/

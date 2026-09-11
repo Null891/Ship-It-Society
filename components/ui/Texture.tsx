@@ -18,7 +18,14 @@ const NOISE = `<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>
 <rect width='140' height='140' filter='url(%23n)'/>
 </svg>`.replace(/\n/g, "");
 
-export function Grain({ opacity = 0.035 }: { opacity?: number }) {
+export function Grain({
+  opacity = 0.035,
+  blend = "screen",
+}: {
+  opacity?: number;
+  /** "screen" for dark grounds, "multiply" for light ones. */
+  blend?: "screen" | "multiply";
+}) {
   return (
     <div
       aria-hidden
@@ -27,8 +34,9 @@ export function Grain({ opacity = 0.035 }: { opacity?: number }) {
         opacity,
         backgroundImage: `url("data:image/svg+xml,${NOISE}")`,
         backgroundRepeat: "repeat",
-        // Screen keeps the grain additive on black rather than muddying it.
-        mixBlendMode: "screen",
+        // Screen keeps the grain additive on black rather than muddying it;
+        // multiply is its mirror on light grounds.
+        mixBlendMode: blend,
       }}
     />
   );

@@ -4,9 +4,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Grain } from "@/components/ui/Texture";
 import { Format } from "@/components/home/Format";
 import { Eyebrow } from "@/components/ui/Button";
-import { OrbitPlate, PlateCaption } from "@/components/ui/Plates";
+import { OrbitPlate } from "@/components/ui/Plates";
+import { Calendar } from "@/components/hackathons/Calendar";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
-import { meetingLine, prizes, schedule, security } from "@/content/club";
+import { hackathonsPage, meetingLine, prizes, security } from "@/content/club";
 
 export const metadata: Metadata = {
   title: "The format",
@@ -14,19 +15,13 @@ export const metadata: Metadata = {
     "One month, idea to deployed. The schedule is fixed so the scope has to flex.",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  upcoming: "Next up",
-  planned: "Planned",
-  complete: "Complete",
-};
-
 export default function HackathonsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Hackathons"
-        title={["One month.", "Idea to shipped."]}
-        standfirst="Every hackathon runs the same thirty days. Officers run each one end to end, and the deadline never moves."
+        eyebrow={hackathonsPage.eyebrow}
+        title={hackathonsPage.title}
+        standfirst={hackathonsPage.standfirst}
       />
 
       <Format />
@@ -49,44 +44,19 @@ export default function HackathonsPage() {
             </p>
           </div>
 
-          {/* The season, drawn as orbits. The marker rides a real SVG motion
-              path rather than being rotated, so it tracks the geometry the
-              way a body actually travels an orbit. */}
-          <div className="mt-10 grid12 items-center gap-y-8">
-            <OrbitPlate className="col-span-4 aspect-square w-full max-w-[300px] justify-self-center text-[var(--stage-fg)] md:col-span-4" />
-            <div className="col-span-4 md:col-span-7 md:col-start-6">
-              <p className="pretty max-w-[46ch] text-lg text-[var(--stage-muted)]">
+          {/* The season, drawn as orbits: one ring per hackathon, labelled
+              with its real window, and a marker travelling the next one. */}
+          <div className="mt-12 grid12 items-center gap-y-10">
+            <OrbitPlate className="col-span-4 md:col-span-7" />
+            <div className="col-span-4 md:col-span-4 md:col-start-9">
+              <p className="pretty max-w-[34ch] text-lg text-[var(--stage-muted)]">
                 Three cycles a season. Each one starts the week the last one
                 ships, so there is always something in the air.
               </p>
-              <PlateCaption index="02" label="Season plate" className="mt-6" />
             </div>
           </div>
 
-          <Stagger as="ul" className="mt-10">
-            {schedule.season.map((s, i) => (
-              <StaggerItem
-                index={i}
-                as="li"
-                key={s.name}
-                className="rule-t grid grid-cols-[1fr_auto] items-baseline gap-x-6 gap-y-1 py-6 md:grid-cols-[minmax(0,260px)_1fr_auto]"
-              >
-                <span className="text-lg font-medium">{s.name}</span>
-                <span className="order-3 col-span-2 text-base text-[var(--stage-muted)] md:order-none md:col-span-1">
-                  {s.window}
-                </span>
-                <span
-                  className={`mono-label ${
-                    s.status === "upcoming"
-                      ? "text-marigold-ink"
-                      : "text-[var(--stage-muted)]"
-                  }`}
-                >
-                  {STATUS_LABEL[s.status] ?? s.status}
-                </span>
-              </StaggerItem>
-            ))}
-          </Stagger>
+          <Calendar className="mt-10" />
         </div>
       </section>
 
@@ -121,7 +91,7 @@ export default function HackathonsPage() {
                 <StaggerItem index={i} key={c.term} className="rule-t py-5">
                   <div className="flex items-baseline justify-between gap-4">
                     <dt className="text-lg font-medium">{c.term}</dt>
-                    <span className="tnum mono-label text-marigold-ink">
+                    <span className="tnum mono-label text-marigold">
                       {c.weight}
                     </span>
                   </div>

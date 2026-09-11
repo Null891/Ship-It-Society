@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAnimationFrame, useScroll, useVelocity } from "motion/react";
 import { usePrefersReducedMotion, useRunWhenVisible } from "@/lib/hooks";
+import { polar } from "@/lib/geometry";
 
 /* ==========================================================================
    The annotation layer.
@@ -54,7 +55,7 @@ export function Annotation({
 }) {
   const color =
     tone === "accent"
-      ? "text-marigold-ink"
+      ? "text-marigold"
       : tone === "current"
         ? ""
         : "text-[var(--stage-muted)]";
@@ -90,8 +91,8 @@ export function Barcode({
       aria-hidden
       viewBox={`0 0 ${x} ${height}`}
       preserveAspectRatio="none"
-      className={`h-[34px] w-auto ${className}`}
-      style={{ maxWidth: "100%" }}
+      className={`w-auto ${className}`}
+      style={{ height, maxWidth: "100%" }}
     >
       {rects.map((r, i) => (
         <rect
@@ -174,13 +175,15 @@ export function Dial({
           {Array.from({ length: ticks }, (_, i) => {
             const a = (i / ticks) * Math.PI * 2;
             const inner = i % 5 === 0 ? r - 10 : r - 5;
+            const [x1, y1] = polar(60, 60, inner, a);
+            const [x2, y2] = polar(60, 60, r - 1, a);
             return (
               <line
                 key={i}
-                x1={60 + Math.cos(a) * inner}
-                y1={60 + Math.sin(a) * inner}
-                x2={60 + Math.cos(a) * (r - 1)}
-                y2={60 + Math.sin(a) * (r - 1)}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
                 stroke="currentColor"
                 strokeWidth={i % 5 === 0 ? 1 : 0.5}
                 opacity={i % 5 === 0 ? 0.85 : 0.4}

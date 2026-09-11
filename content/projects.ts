@@ -34,6 +34,7 @@ export const projects: Project[] = [];
 export const projectsPage = {
   eyebrow: "Archive",
   headline: "Everything the club has shipped.",
+  title: ["Everything the club", "has shipped."],
   standfirst:
     "Each entry is a real deployment with a real URL. The write-up covers what got cut, what the security review found, and what it took to clear it.",
   /* The designed empty state. Shown until the first project lands. */

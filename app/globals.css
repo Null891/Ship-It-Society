@@ -13,28 +13,49 @@
     Consolas, monospace;
 
   /* --- Color ----------------------------------------------------------
-     Marigold is 10.2:1 on #000 but only 2.05:1 on #fff.
-     On light surfaces it is a FILL, never text. Accent text on light
-     must use --color-marigold-ink (7.1:1). See CLAUDE.md.
+     Minimal cyberpunk: a void-black canvas, one elevation step, hairlines,
+     and a single saturated accent. Every text pairing below is measured
+     against #000 and against the panel surfaces (see CLAUDE.md):
+
+       fg 18.8:1 · muted 8.2:1 · subtle 6.2:1 · marigold 10.2:1
+       alert 6.8:1 · ok 11.0:1   (lowest anywhere: subtle on panel-hi 5.2:1)
+
+     marigold-ink is only 3.1:1 on black. It survives solely for text on
+     the light plate grounds (stone, paper). Never use it on the canvas.
      ------------------------------------------------------------------- */
   --color-ink: #000000;
-  --color-surface-900: #1d1d1f;
-  --color-surface-800: #2a2a2c;
-  --color-surface-700: #424245;
-  --color-muted: #86868b;
-  --color-muted-dim: #6e6e73;
-  --color-line-dark: rgb(255 255 255 / 0.14);
-  --color-line-dark-soft: rgb(255 255 255 / 0.07);
+  --color-ink-soft: #0a0a0b;
+  --color-surface-900: #111113;
+  --color-surface-800: #18181b;
+  --color-surface-700: #27272a;
+  --color-fg: #f2f2f3;
+  --color-muted: #a1a1a7;
+  --color-muted-dim: #8b8b92;
+  --color-line-dark: rgb(255 255 255 / 0.12);
+  --color-line-dark-soft: rgb(255 255 255 / 0.06);
+  --color-line-strong: rgb(255 255 255 / 0.28);
+
+  /* Light grounds exist only inside plates and chips now. */
   --color-line-light: #d2d2d7;
   --color-line-light-soft: #e8e8ed;
   --color-surface-100: #f5f5f7;
   --color-surface-50: #fafafc;
   --color-paper: #ffffff;
+  --color-paper-muted: #c7c7cc;
 
   --color-marigold: #ff9f0a;
   --color-marigold-hi: #ffb340;
   --color-marigold-ink: #8a4b00;
-  --color-marigold-dim: rgb(255 159 10 / 0.14);
+  --color-marigold-dim: rgb(255 159 10 / 0.12);
+  --color-marigold-glow: rgb(255 159 10 / 0.35);
+
+  /* Status only. Never decoration, never a second brand colour. */
+  --color-ok: #32d74b;
+  --color-alert: #ff5a4e;
+
+  /* Plate grounds. Stone is paired only with ink and marigold FILLS. */
+  --color-stone: #b7baaf;
+  --color-stone-hi: #d0d3c8;
 
   /* --- Type scale ------------------------------------------------------
      Body is 17px (Apple's), not 16. Tracking tightens optically as size
@@ -53,7 +74,7 @@
   --text-sm--letter-spacing: 0em;
 
   --text-base: 17px;
-  --text-base--line-height: 1.53;
+  --text-base--line-height: 1.62;
   --text-base--letter-spacing: -0.011em;
 
   --text-lg: clamp(18px, 1.4vw, 21px);
@@ -69,21 +90,22 @@
   --text-2xl--letter-spacing: -0.025em;
 
   --text-3xl: clamp(27px, 5.2vw, 56px);
-  --text-3xl--line-height: 1.06;
+  --text-3xl--line-height: 1.02;
   --text-3xl--letter-spacing: -0.03em;
 
   --text-4xl: clamp(31px, 7vw, 80px);
-  --text-4xl--line-height: 1.0;
+  --text-4xl--line-height: 0.96;
   --text-4xl--letter-spacing: -0.034em;
 
   --text-5xl: clamp(34px, 9.4vw, 128px);
-  --text-5xl--line-height: 0.94;
+  --text-5xl--line-height: 0.9;
   --text-5xl--letter-spacing: -0.04em;
 
   /* --- Radii: a system, not a value ------------------------------------ */
   --radius-none: 0px;
-  --radius-card: 12px;
+  --radius-hud: 2px;
   --radius-inset: 6px;
+  --radius-card: 12px;
   --radius-pill: 980px;
 
   /* --- Easing ---------------------------------------------------------- */
@@ -103,37 +125,25 @@
   --dur-slow: 420ms;
   --dur-xslow: 700ms;
 
-  /* Stage: interpolated by StageShift on the home page, static elsewhere. */
-  --page-bg: #f5f5f7;
-  --stage-fg: #1d1d1f;
-  --stage-muted: #6e6e73;
-  --stage-line: #d2d2d7;
+  /* The chamfer: the HUD's cut corner. One size, used everywhere. */
+  --cut: 10px;
+  --cut-sm: 6px;
 
-  /* Nav chrome is deliberately NOT the page stage.
-     The page ramps smoothly from black to off-white, which means it spends a
-     stretch of scroll at mid-grey — and a mid-grey background cannot carry
-     either light or dark text at 4.5:1. Measured, the nav fell to 1.71:1
-     around y=3200 on the home page. So the nav gets its own pair that STEPS
-     between the two ends instead of interpolating through the middle, and it
-     is always legible. StageShift drives these alongside the page vars. */
-  --nav-bg: #f5f5f7;
-  --nav-fg: #1d1d1f;
-
-  color-scheme: light;
-}
-
-/* Route-level stage. Set before first paint by the script in the root layout,
-   and kept in sync on navigation by StageRoot. On the home page StageShift
-   writes inline properties on <html>, which outrank this rule, and removes
-   them on unmount so the page falls back here cleanly. */
-:root[data-stage="dark"] {
-  --page-bg: #000000;
-  --stage-fg: #f5f5f7;
-  --stage-muted: #86868b;
-  --stage-line: rgb(255 255 255 / 0.14);
-
-  --nav-bg: #000000;
-  --nav-fg: #f5f5f7;
+  /* Stage variables. These used to interpolate from black to off-white on
+     the home page, and that crossfade is where three accessibility bugs
+     lived: body text passed through ~1:1 mid-transition, the nav had to
+     step to stay legible, and the marigold focus ring fell to 1.9:1 on the
+     light half. The site is one dark stage now. The names are kept so every
+     component that reads them keeps working. */
+  --page-bg: var(--color-ink);
+  --stage-fg: var(--color-fg);
+  --stage-muted: var(--color-muted);
+  --stage-subtle: var(--color-muted-dim);
+  --stage-line: var(--color-line-dark);
+  --stage-line-strong: var(--color-line-strong);
+  --stage-panel: var(--color-surface-900);
+  --nav-bg: var(--color-ink);
+  --nav-fg: var(--color-fg);
 
   color-scheme: dark;
 }
@@ -187,9 +197,15 @@
     font-synthesis-weight: none;
   }
 
+  html {
+    background-color: var(--color-ink);
+    scrollbar-color: rgb(255 255 255 / 0.22) var(--color-ink);
+    scrollbar-width: thin;
+  }
+
   ::selection {
     background: var(--color-marigold);
-    color: #000;
+    color: var(--color-ink);
   }
 
   :focus-visible {
@@ -310,6 +326,182 @@
 }
 
 /* ==========================================================================
+   HUD utilities — the minimal-cyberpunk vocabulary.
+   Structure, not ornament: each one frames, measures or labels something.
+   ========================================================================== */
+
+/* The chamfer. A cut top-left and bottom-right corner, set by --cut. */
+@utility chamfer {
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+}
+
+/* A 1px chamfered OUTLINE. clip-path clips borders away, so the line is a
+   clipped ::before and the fill a clipped ::after inset by 1px. Set --line
+   and --fill on the element; hover states only need to change those. */
+@utility chamfer-line {
+  position: relative;
+  isolation: isolate;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    transition: background-color var(--dur-fast) var(--ease-apple);
+  }
+  &::before {
+    inset: 0;
+    z-index: -2;
+    background: var(--line, var(--stage-line-strong));
+    clip-path: polygon(
+      var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut)
+    );
+  }
+  &::after {
+    inset: 1px;
+    z-index: -1;
+    background: var(--fill, var(--page-bg));
+    clip-path: polygon(
+      calc(var(--cut) - 0.41px) 0, 100% 0, 100% calc(100% - var(--cut) + 0.41px),
+      calc(100% - var(--cut) + 0.41px) 100%, 0 100%, 0 calc(var(--cut) - 0.41px)
+    );
+  }
+}
+
+/* Dot field, as on a node canvas. */
+@utility hud-dots {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgb(255 255 255 / 0.1) 1px,
+    transparent 1.3px
+  );
+  background-size: 24px 24px;
+}
+
+/* Hairline column grid, as on a spec sheet. */
+@utility hud-columns {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--stage-line) 0 1px,
+    transparent 1px 100%
+  );
+  background-size: calc(100% / 6) 100%;
+}
+
+/* Scanlines. At 2.5% they read as texture, not as an effect. */
+@utility scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.025) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* Outline type, for echo headlines. */
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--outline, var(--stage-line-strong));
+}
+
+/* Hazard stripes. Accent fill only, never behind text. */
+@utility hazard {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-marigold) 0 5px,
+    transparent 5px 11px
+  );
+}
+
+/* ==========================================================================
+   FUI motion vocabulary — from the field guide.
+
+     fui-blink         steady on/off, under 1Hz            (status LEDs)
+     fui-slide-blink   slides in, then blinks twice        (index numbers)
+     fui-build         builds on left to right             (rules, bars)
+     fui-flash         one accent flash                    (confirmations)
+     fui-glitch        a 240ms slice jitter                (wordmark hover)
+     fui-crash         a jolt and two blinks               (errors)
+
+   Nothing here flashes more than twice per trigger, which keeps every
+   effect well inside WCAG 2.3.1 (no more than three flashes a second).
+   Reveal-driven ones play when their [data-reveal] ancestor gets .is-in,
+   so they obey the same visible-by-default contract as everything else.
+   ========================================================================== */
+
+@keyframes fui-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.2; }
+}
+@keyframes fui-slide-blink {
+  0% { opacity: 0; transform: translateX(-10px); }
+  40% { opacity: 1; transform: none; }
+  55% { opacity: 0.15; }
+  70% { opacity: 1; }
+  85% { opacity: 0.15; }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes fui-build {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes fui-flash {
+  0% { background-color: var(--color-marigold); color: var(--color-ink); }
+  100% { background-color: transparent; }
+}
+@keyframes fui-glitch {
+  0% { transform: none; clip-path: none; }
+  20% { transform: translate(-2px, 1px); clip-path: inset(10% 0 55% 0); }
+  40% { transform: translate(2px, -1px); clip-path: inset(60% 0 8% 0); }
+  60% { transform: translate(-1px, 0); clip-path: inset(30% 0 35% 0); }
+  100% { transform: none; clip-path: none; }
+}
+@keyframes fui-crash {
+  0% { transform: translateX(0); opacity: 1; }
+  15% { transform: translateX(-4px); }
+  30% { transform: translateX(3px); opacity: 0.2; }
+  45% { transform: translateX(0); opacity: 1; }
+  65% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+.fui-blink {
+  animation: fui-blink 1.4s steps(1) infinite;
+}
+html.anim [data-reveal]:not(.is-in) .fui-slide-blink {
+  opacity: 0;
+}
+html.anim [data-reveal].is-in .fui-slide-blink {
+  animation: fui-slide-blink 720ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--reveal-i, 0) * 60ms + 80ms);
+}
+.fui-build {
+  transform-origin: left center;
+}
+html.anim [data-reveal]:not(.is-in) .fui-build {
+  transform: scaleX(0);
+}
+html.anim [data-reveal].is-in .fui-build {
+  animation: fui-build var(--dur-xslow) var(--ease-out-expo) both;
+  animation-delay: calc(var(--reveal-i, 0) * 60ms + 120ms);
+}
+.fui-flash {
+  animation: fui-flash 420ms var(--ease-out-expo) 1;
+}
+.fui-glitch-hover:hover .fui-glitch-target {
+  animation: fui-glitch 240ms steps(3) 1;
+}
+.fui-crash {
+  animation: fui-crash 520ms var(--ease-apple) 1;
+}
+
+/* ==========================================================================
    Entry reveals — visible by default, animation layered on top.
 
    This inverts the old contract. Previously the server rendered
@@ -399,6 +591,101 @@ html.anim [data-reveal-lines]:not(.is-in) .draw-path {
 }
 
 /* ==========================================================================
+   Plates — each poster composition sits on its OWN ground (ink, stone or
+   marigold) so it reads as a printed object rather than line art floating
+   on the page. The ground sets the text colours its rails use.
+
+   Contrast (checked): muted rail text is >= 4.5:1 on every ground, and chip
+   labels are ink-on-paper or paper-on-ink, so a label stays legible over
+   any art that happens to sit under it.
+   ========================================================================== */
+
+.plate {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.plate-ink {
+  /* On the black canvas an ink plate would dissolve into the page, so it
+     takes the panel surface and an inset hairline (outline, not shadow). */
+  background: var(--color-surface-900);
+  outline: 1px solid var(--stage-line);
+  outline-offset: -1px;
+  color: var(--color-paper);
+  --plate-muted: var(--color-muted);
+  --plate-chip-bg: var(--color-paper);
+  --plate-chip-fg: var(--color-ink);
+}
+.plate-stone {
+  background: var(--color-stone);
+  color: var(--color-ink);
+  --plate-muted: rgb(0 0 0 / 0.66);
+  --plate-chip-bg: var(--color-ink);
+  --plate-chip-fg: var(--color-paper);
+}
+.plate-marigold {
+  background: var(--color-marigold);
+  color: var(--color-ink);
+  --plate-muted: rgb(0 0 0 / 0.66);
+  --plate-chip-bg: var(--color-ink);
+  --plate-chip-fg: var(--color-paper);
+}
+
+/* Pixel type resolves column by column when its plate is revealed. */
+.px {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 380ms var(--ease-out-expo),
+    transform 380ms var(--ease-out-expo);
+  transition-delay: calc(var(--px-col, 0) * 20ms + var(--px-row, 0) * 7ms + 120ms);
+}
+html.anim [data-reveal]:not(.is-in) .px {
+  opacity: 0;
+  transform: scale(0.25);
+}
+
+/* The scan bar that leads the pixels across. Invisible at rest, so a page
+   that never animates simply never shows it. */
+.scanline {
+  opacity: 0;
+}
+html.anim [data-reveal].is-in .scanline {
+  animation: plate-scan 1000ms var(--ease-in-out-soft) 80ms both;
+}
+@keyframes plate-scan {
+  0% { opacity: 1; transform: translateX(0); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(var(--scan-dist, 0px)); }
+}
+
+/* Terminal cursor after the pixel word — the same block as the wordmark. */
+.px-cursor {
+  animation: plate-blink 1.1s steps(1) infinite;
+}
+.plate[data-running="false"] .px-cursor {
+  animation-play-state: paused;
+}
+@keyframes plate-blink {
+  50% { opacity: 0; }
+}
+
+/* Signal rings off the mast tip. Only loop while the plate is on screen. */
+.signal-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+.plate[data-running="true"] .signal-ring {
+  animation: plate-signal 2.6s var(--ease-out-expo) infinite;
+  animation-delay: calc(var(--sig-i, 0) * 0.86s);
+}
+@keyframes plate-signal {
+  0% { transform: scale(0.35); opacity: 0.9; }
+  100% { transform: scale(3.4); opacity: 0; }
+}
+
+/* ==========================================================================
    Reduced motion — every scroll effect must still show all content.
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
@@ -425,5 +712,27 @@ html.anim [data-reveal-lines]:not(.is-in) .draw-path {
   html.anim [data-reveal]:not(.is-in) .draw-path,
   html.anim [data-reveal-lines]:not(.is-in) .draw-path {
     stroke-dashoffset: 0 !important;
+  }
+  html.anim [data-reveal]:not(.is-in) .px {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .scanline,
+  .signal-ring {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .px-cursor {
+    animation: none !important;
+  }
+  .fui-blink,
+  .fui-slide-blink,
+  .fui-build,
+  .fui-flash,
+  .fui-glitch-target,
+  .fui-crash {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

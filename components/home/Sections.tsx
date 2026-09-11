@@ -3,7 +3,7 @@ import { club, faq, join, learn, premise, prizes, security, stats } from "@/cont
 import { sponsors } from "@/content/sponsors";
 import { Eyebrow } from "@/components/ui/Button";
 import { Annotation, Marquee, RegMark } from "@/components/ui/Poster";
-import { EuclidPlate, PlateCaption } from "@/components/ui/Plates";
+import { EuclidPlate } from "@/components/ui/Plates";
 import { Grain } from "@/components/ui/Texture";
 import {
   CountUp,
@@ -99,11 +99,6 @@ export function Security() {
               ))}
             </div>
 
-            {/* The review plate. Its diagonal wipe assembles as the section
-                scrolls, and the two marks counter-rotate — a different
-                gesture from every other plate on the site. */}
-            <EuclidPlate className="mt-10 aspect-[4/3] w-full text-[var(--stage-fg)]" />
-            <PlateCaption index="04" label="Review plate" className="mt-3" />
           </div>
 
           <Reveal className="col-span-4 mt-10 md:col-span-6 md:col-start-7 md:mt-0">
@@ -122,13 +117,17 @@ export function Security() {
                     className="grid grid-cols-[92px_1fr] gap-x-5 border-b border-[var(--color-line-dark-soft)] py-4 last:border-b-0 md:grid-cols-[116px_1fr]"
                   >
                     <dt className="mono-label pt-1 text-marigold">{c.term}</dt>
-                    <dd className="pretty text-sm text-[#c7c7cc]">{c.detail}</dd>
+                    <dd className="pretty text-sm text-[var(--color-paper-muted)]">{c.detail}</dd>
                   </div>
                 ))}
               </dl>
             </div>
           </Reveal>
         </div>
+
+        {/* The review plate, full width under both columns. It draws its
+            diagonal as it scrolls in and the two marks turn into place. */}
+        <EuclidPlate className="mt-16 md:mt-24" />
       </div>
     </section>
   );
@@ -181,9 +180,8 @@ export function Prizes() {
                 <StaggerItem index={i} key={c.term} className="rule-t py-4">
                   <div className="flex items-baseline justify-between gap-4">
                     <dt className="text-base font-medium">{c.term}</dt>
-                    {/* marigold-ink, not marigold: this is text on a light
-                        surface. See the marigold rule in CLAUDE.md. */}
-                    <span className="tnum mono-label text-marigold-ink">
+                    
+                    <span className="tnum mono-label text-marigold">
                       {c.weight}
                     </span>
                   </div>

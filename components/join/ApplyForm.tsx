@@ -32,7 +32,7 @@ const inputBase =
 function fieldClasses(hasError: boolean) {
   return `${inputBase} ${
     hasError
-      ? "border-[var(--color-marigold-ink)]"
+      ? "border-[var(--color-alert)]"
       : "border-[var(--color-line-light)]"
   }`;
 }
@@ -48,7 +48,7 @@ function ErrorText({ id, children }: { id: string; children?: string }) {
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: DUR.fast, ease: EASE_OUT_EXPO }}
-          className="overflow-hidden text-sm text-marigold-ink"
+          className="overflow-hidden text-sm text-alert"
         >
           <span className="block pt-2">{children}</span>
         </motion.p>
@@ -297,7 +297,7 @@ export function ApplyForm() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: DUR.base, ease: EASE_OUT_EXPO }}
-              className="text-sm text-marigold-ink"
+              className="text-sm text-alert"
             >
               {serverMessage}{" "}
               <a

@@ -229,7 +229,7 @@ export const prizes = {
    saving and -08:00 from early November to early March.
    ------------------------------------------------------------------------- */
 
-type SeasonEntry = {
+export type SeasonEntry = {
   name: string;
   /** Local date, YYYY-MM-DD. */
   start: string;
@@ -238,14 +238,15 @@ type SeasonEntry = {
   utcOffset: string;
 };
 
-const season: SeasonEntry[] = [
+/** Raw season dates. lib/schedule.ts derives every live status from these. */
+export const season: SeasonEntry[] = [
   { name: "Hackathon 01", start: "2026-09-23", end: "2026-10-23", utcOffset: "-07:00" },
   { name: "Hackathon 02", start: "2026-10-28", end: "2026-11-28", utcOffset: "-08:00" },
   { name: "Hackathon 03", start: "2026-12-02", end: "2027-01-02", utcOffset: "-08:00" },
 ];
 
 /** "2026-10-23" -> "Oct 23". Parsed as UTC so it cannot drift a day. */
-function short(date: string): string {
+export function short(date: string): string {
   return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -254,7 +255,7 @@ function short(date: string): string {
 }
 
 /** End of the submission day, as a real instant. */
-function deadlineOf(entry: SeasonEntry): string {
+export function deadlineOf(entry: SeasonEntry): string {
   return `${entry.end}T23:59:00${entry.utcOffset}`;
 }
 
@@ -312,10 +313,29 @@ export const officers: Officer[] = [
   { name: "Abhinava Sivakumaran", role: "Co-founder", image: "" },
 ];
 
+/* --- Page mastheads --------------------------------------------------------
+   Title arrays control exactly where the display lines break.
+   ------------------------------------------------------------------------- */
+
+export const teamPage = {
+  eyebrow: "Team",
+  title: ["Officers run", "every hackathon."],
+  standfirst:
+    "Students run the club end to end. Officers plan each cycle, review every spec, and judge every demo.",
+};
+
+export const hackathonsPage = {
+  eyebrow: "Hackathons",
+  title: ["One month.", "Idea to shipped."],
+  standfirst:
+    "Every hackathon runs the same thirty days. Officers run each one end to end, and the deadline never moves.",
+};
+
 /* --- Join ----------------------------------------------------------------- */
 
 export const join = {
   eyebrow: "Join",
+  title: ["No experience required.", "Effort is."],
   headline: "No experience required. Effort is.",
   standfirst:
     "You do not need to have built anything before. You do need to show up for one month and finish what you start.",

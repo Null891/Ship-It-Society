@@ -5,7 +5,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { projects, projectsPage } from "@/content/projects";
 import { CoverPlate } from "@/components/ui/Texture";
 import { Morph } from "@/components/ui/Morph";
-import { MosaicPlate, PlateCaption } from "@/components/ui/Plates";
+import { ArchivePlate } from "@/components/ui/Plates";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -23,21 +23,16 @@ export default function ProjectsPage() {
     <>
       <PageHeader
         eyebrow={projectsPage.eyebrow}
-        title={["Everything the club", "has shipped."]}
+        title={projectsPage.title}
         standfirst={projectsPage.standfirst}
       />
 
-      {/* The archive's own plate: a word that resolves out of a pixel mosaic
-          as it enters, echoing the half-pixelated display type on the
-          editorial reference. It is real text, so it stays selectable and
-          readable to assistive tech — the mosaic is an overlay on top. */}
-      <section className="pt-12 md:pt-16" aria-hidden>
+      {/* The archive's own plate: the word in pixel type on a marigold
+          ground, resolving column by column behind a scan bar. Decorative —
+          the page heading already says it. */}
+      <section className="pt-12 md:pt-16">
         <div className="edge">
-          <MosaicPlate
-            word="SHIPPED"
-            className="optical text-5xl font-semibold leading-[0.9] tracking-[-0.045em]"
-          />
-          <PlateCaption index="01" label="Archive plate" className="mt-5" />
+          <ArchivePlate />
         </div>
       </section>
 
@@ -55,7 +50,7 @@ export default function ProjectsPage() {
                 >
                   {projectsPage.empty.index}
                 </span>
-                <span className="mono-label mt-2 block text-marigold-ink">
+                <span className="mono-label mt-2 block text-marigold">
                   {projectsPage.empty.label}
                 </span>
               </div>

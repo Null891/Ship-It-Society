@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useAnimationFrame, useMotionValueEvent, useScroll, useVelocity } from "motion/react";
 import { format } from "@/content/club";
 import { usePrefersReducedMotion, useRunWhenVisible } from "@/lib/hooks";
+import { polar } from "@/lib/geometry";
 import { Annotation, Barcode, RegMark } from "@/components/ui/Poster";
 
 /* ==========================================================================
@@ -101,7 +102,7 @@ export function CyclePlate() {
               <svg viewBox="0 0 320 320" className="h-full w-full" aria-hidden>
                 {/* outer disc */}
                 <circle cx="160" cy="160" r="146" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.18" />
-                <circle cx="160" cy="160" r="132" fill="#111113" />
+                <circle cx="160" cy="160" r="132" fill="var(--color-ink-soft)" />
                 <circle cx="160" cy="160" r="132" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.24" />
 
                 {/* the arc that draws as the cycle advances */}
@@ -124,11 +125,13 @@ export function CyclePlate() {
                   {Array.from({ length: 90 }, (_, i) => {
                     const a = (i / 90) * Math.PI * 2;
                     const inner = i % 6 === 0 ? 104 : 114;
+                    const [x1, y1] = polar(160, 160, inner, a);
+                    const [x2, y2] = polar(160, 160, 124, a);
                     return (
                       <line
                         key={i}
-                        x1={160 + Math.cos(a) * inner} y1={160 + Math.sin(a) * inner}
-                        x2={160 + Math.cos(a) * 124} y2={160 + Math.sin(a) * 124}
+                        x1={x1} y1={y1}
+                        x2={x2} y2={y2}
                         stroke="currentColor"
                         strokeWidth={i % 6 === 0 ? 1 : 0.5}
                         opacity={i % 6 === 0 ? 0.5 : 0.22}
@@ -141,11 +144,13 @@ export function CyclePlate() {
                 <g ref={burstRef} style={{ transformOrigin: "160px 160px" }}>
                   {Array.from({ length: 64 }, (_, i) => {
                     const a = (i / 64) * Math.PI * 2;
+                    const [x1, y1] = polar(160, 160, 40, a);
+                    const [x2, y2] = polar(160, 160, 60, a);
                     return (
                       <line
                         key={i}
-                        x1={160 + Math.cos(a) * 40} y1={160 + Math.sin(a) * 40}
-                        x2={160 + Math.cos(a) * 60} y2={160 + Math.sin(a) * 60}
+                        x1={x1} y1={y1}
+                        x2={x2} y2={y2}
                         stroke="var(--color-marigold)"
                         strokeWidth={i % 2 === 0 ? 1.6 : 0.8}
                         opacity={i % 2 === 0 ? 0.95 : 0.5}
@@ -155,8 +160,8 @@ export function CyclePlate() {
                 </g>
 
                 <circle cx="160" cy="160" r="34" fill="var(--color-marigold)" />
-                <circle cx="160" cy="160" r="4" fill="#000" />
-                <line x1="160" y1="160" x2="160" y2="132" stroke="#000" strokeWidth="1.6" />
+                <circle cx="160" cy="160" r="4" fill="var(--color-ink)" />
+                <line x1="160" y1="160" x2="160" y2="132" stroke="var(--color-ink)" strokeWidth="1.6" />
 
                 {/* corner arrow, straight from the reference */}
                 <path d="M18 78 L18 44 L52 44" fill="none" stroke="var(--color-marigold)" strokeWidth="1.6" className="draw-path" pathLength={1} />
@@ -195,7 +200,7 @@ export function CyclePlate() {
             <h2 id="cycle-title" className="optical mt-5 text-3xl font-semibold">
               Four weeks. One deployment.
             </h2>
-            <p className="pretty mt-5 max-w-[42ch] text-base text-[#c7c7cc]">
+            <p className="pretty mt-5 max-w-[42ch] text-base text-[var(--color-paper-muted)]">
               Every hackathon turns the same way. Scope, build, harden, ship —
               and the clock does not stop for anyone.
             </p>

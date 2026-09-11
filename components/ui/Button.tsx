@@ -1,29 +1,84 @@
 import Link from "next/link";
 
 /* ==========================================================================
-   Buttons. Pill radius only — the radius system in CLAUDE.md reserves
-   980px for actions, 12px for cards, and 0 for editorial blocks.
+   Buttons.
 
-   Marigold fill carries near-black text, which is the only legal way to use
-   the accent on a light surface.
+   The HUD cut: actions are chamfered, not rounded. Three variants:
+
+     primary  marigold fill, ink text. The one filled action per view.
+     ghost    a 1px chamfered outline that lights marigold on hover.
+     quiet    text with a trailing arrow, for tertiary links.
+
+   Every label rolls on hover — the text slides up and an identical copy
+   slides in beneath it. The copy is aria-hidden, so assistive tech reads
+   the label once. It is pure CSS, and reduced motion (which collapses all
+   transition durations globally) makes it an instant swap.
+
+   External links open in a new tab and SAY so, in visually hidden text,
+   so nobody is surprised by a context change they were not told about.
    ========================================================================== */
 
-type Variant = "solid" | "outline" | "quiet";
+type Variant = "primary" | "ghost" | "quiet";
+type Size = "sm" | "md" | "lg";
 
-const base =
-  "inline-flex items-center justify-center gap-2 rounded-pill px-6 py-3 text-base font-medium transition-[background-color,border-color,transform,opacity] duration-[var(--dur-fast)] ease-[var(--ease-apple)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45";
-
-const variants: Record<Variant, string> = {
-  solid: "bg-marigold text-ink hover:bg-marigold-hi",
-  outline:
-    "border border-[var(--stage-line)] text-[var(--stage-fg)] hover:border-[var(--stage-fg)]",
-  quiet: "text-[var(--stage-fg)] opacity-70 hover:opacity-100",
+const SIZE: Record<Size, string> = {
+  sm: "h-9 px-4 text-sm [--cut:var(--cut-sm)]",
+  md: "h-11 px-5 text-base",
+  lg: "h-[52px] px-7 text-base",
 };
+
+const VARIANT: Record<Variant, string> = {
+  primary:
+    "chamfer bg-marigold font-medium text-ink hover:bg-marigold-hi active:translate-y-px",
+  ghost:
+    "chamfer-line font-medium text-[var(--stage-fg)] [--line:var(--stage-line-strong)] hover:[--line:var(--color-marigold)] active:translate-y-px",
+  quiet:
+    "px-0 font-medium text-[var(--stage-fg)] underline decoration-[var(--stage-line-strong)] underline-offset-[6px] hover:decoration-marigold",
+};
+
+const BASE =
+  "group relative inline-flex select-none items-center justify-center gap-2.5 whitespace-nowrap transition-[background-color,color,transform,text-decoration-color] duration-[var(--dur-fast)] ease-[var(--ease-apple)] disabled:pointer-events-none disabled:opacity-45";
+
+/** The rolling label. The visible copy is the one announced. */
+export function Roll({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="relative inline-flex overflow-hidden">
+      <span className="block transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-expo)] group-hover:-translate-y-full group-focus-visible:-translate-y-full">
+        {children}
+      </span>
+      <span
+        aria-hidden
+        className="absolute inset-0 block translate-y-full transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-expo)] group-hover:translate-y-0 group-focus-visible:translate-y-0"
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
+function Arrow({ external }: { external: boolean }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 12 12"
+      className="h-3 w-3 shrink-0 transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-expo)] group-hover:translate-x-0.5"
+      fill="none"
+    >
+      {external ? (
+        <path d="M3.5 8.5l5-5M4.5 3.5h4v4" stroke="currentColor" strokeWidth="1.3" />
+      ) : (
+        <path d="M1.5 6h8M6.5 3l3 3-3 3" stroke="currentColor" strokeWidth="1.3" />
+      )}
+    </svg>
+  );
+}
 
 export function Button({
   href,
   children,
-  variant = "solid",
+  variant = "primary",
+  size = "md",
+  arrow = false,
   className = "",
   type = "button",
   disabled,
@@ -32,42 +87,56 @@ export function Button({
   href?: string;
   children: React.ReactNode;
   variant?: Variant;
+  size?: Size;
+  /** Trailing arrow. External links get the diagonal one automatically. */
+  arrow?: boolean;
   className?: string;
   type?: "button" | "submit";
   disabled?: boolean;
-} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const cls = `${base} ${variants[variant]} ${className}`;
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type">) {
+  const cls = `${BASE} ${variant === "quiet" ? "" : SIZE[size]} ${VARIANT[variant]} ${className}`;
+  const external = !!href && /^https?:/.test(href);
+  const label = (
+    <>
+      <Roll>{children}</Roll>
+      {(arrow || external) && <Arrow external={external} />}
+    </>
+  );
 
   if (href) {
-    const external = href.startsWith("http") || href.startsWith("mailto:");
     if (external) {
       return (
-        <a
-          href={href}
-          className={cls}
-          {...(href.startsWith("http")
-            ? { target: "_blank", rel: "noreferrer noopener" }
-            : {})}
-        >
-          {children}
+        <a href={href} className={cls} target="_blank" rel="noreferrer noopener">
+          {label}
+          <span className="sr-only"> (opens in a new tab)</span>
+        </a>
+      );
+    }
+    if (href.startsWith("mailto:")) {
+      return (
+        <a href={href} className={cls}>
+          {label}
         </a>
       );
     }
     return (
       <Link href={href} className={cls}>
-        {children}
+        {label}
       </Link>
     );
   }
 
   return (
     <button type={type} className={cls} disabled={disabled} {...rest}>
-      {children}
+      {label}
     </button>
   );
 }
 
-/** A short uppercase mono label. The site's "technical layer". */
+/**
+ * The section eyebrow: a numbered index, a double-slash, and the label.
+ * The number slides in and blinks twice when the section enters.
+ */
 export function Eyebrow({
   children,
   className = "",
@@ -75,21 +144,23 @@ export function Eyebrow({
 }: {
   children: React.ReactNode;
   className?: string;
-  /** Section number. Renders the poster's "01 /" index before the label. */
+  /** Section number, rendered as the poster's "01 //" index. */
   index?: number;
 }) {
   return (
     <p
+      data-reveal
       className={`mono-label flex items-center gap-2.5 text-[var(--stage-muted)] ${className}`}
     >
       {index !== undefined && (
         <>
-          {/* The numbered index from the reference posters. Decorative: the
-              label beside it already says what the section is. */}
-          <span aria-hidden className="text-marigold-ink">
+          {/* Decorative: the label beside it already names the section. */}
+          <span aria-hidden className="fui-slide-blink text-marigold">
             {String(index).padStart(2, "0")}
           </span>
-          <span aria-hidden className="h-px w-6 bg-[var(--stage-line)]" />
+          <span aria-hidden className="text-[var(--stage-subtle)]">
+            {"//"}
+          </span>
         </>
       )}
       {children}

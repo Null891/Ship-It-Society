@@ -1,5 +1,4 @@
 import { HeroSequence } from "@/components/home/HeroSequence";
-import { StageShift } from "@/components/chrome/Stage";
 import { Countdown } from "@/components/home/Countdown";
 import { Format } from "@/components/home/Format";
 import { CyclePlate } from "@/components/home/CyclePlate";
@@ -31,10 +30,6 @@ export default function HomePage() {
   return (
     <>
       <HeroSequence />
-
-      {/* The temperature changes here, in the gap between the cinematic hero
-          and the editorial body — never underneath a block of text. */}
-      <StageShift />
 
       {/* The vertical index from the reference posters, pinned to the left
           margin on wide screens only — below 1280px there is no margin to

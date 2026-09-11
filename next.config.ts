@@ -17,10 +17,15 @@ import type { NextConfig } from "next";
    down, and frame-ancestors closes the finding that was actually exploited.
    ========================================================================== */
 
+const isDev = process.env.NODE_ENV === "development";
+
 const CSP = [
   "default-src 'self'",
   // 'unsafe-inline': see the note above. va.vercel-scripts.com is Analytics.
-  "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
+  // 'unsafe-eval' is added in DEVELOPMENT ONLY: React rebuilds server call
+  // stacks with eval() in dev and Turbopack's HMR relies on it, so without
+  // it every local page load logs CSP errors. Production never receives it.
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
   // Tailwind emits inline styles, and Motion writes inline style attributes.
   "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
   "font-src 'self' https://cdn.fontshare.com data:",
@@ -31,7 +36,8 @@ const CSP = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "upgrade-insecure-requests",
+  // Production is https-only; upgrading would only break plain-http localhost.
+  ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const SECURITY_HEADERS = [

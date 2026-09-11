@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
-import { meetingLine, officers } from "@/content/club";
+import { meetingLine, officers, teamPage } from "@/content/club";
 
 export const metadata: Metadata = {
   title: "Team",
@@ -24,9 +24,9 @@ export default function TeamPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Team"
-        title={["Officers run", "every hackathon."]}
-        standfirst="No faculty approval loops and no waiting on a sponsor teacher to unlock a room. The people who run the club are students who ship."
+        eyebrow={teamPage.eyebrow}
+        title={teamPage.title}
+        standfirst={teamPage.standfirst}
       />
 
       <section className="pt-16 md:pt-24">

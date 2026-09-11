@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { SmoothScroll } from "@/components/chrome/SmoothScroll";
-import { StageRoot } from "@/components/chrome/Stage";
 import { RevealRoot } from "@/components/motion/RevealRoot";
 import { Nav } from "@/components/chrome/Nav";
 import { Footer } from "@/components/chrome/Footer";
@@ -10,8 +9,13 @@ import { StructuredData } from "@/components/chrome/StructuredData";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { club, hero } from "@/content/club";
+import { SITE_URL } from "@/lib/site";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shipitsociety.vercel.app";
+/* Date-driven content (the next meeting, which cycle is running, the footer
+   year) is rendered on the server, so a fully static page would freeze it at
+   deploy time. Regenerating every six hours keeps it true without anyone
+   having to redeploy. The countdown itself runs on the client. */
+export const revalidate = 21600;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -36,20 +40,16 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+/* One dark stage on every page, so the browser chrome matches it whatever
+   the visitor's OS setting is. */
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f5f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
-  colorScheme: "light dark",
+  themeColor: "#000000",
+  colorScheme: "dark",
 };
 
-/* Runs before first paint. Three jobs:
+/* Runs before first paint. Two jobs:
 
-   1. data-stage — so the home page never flashes light before the cinematic
-      hero takes over. StageRoot keeps it correct after navigation.
-
-   2. the `anim` class — this is the gate for every entry reveal on the site.
+   1. the `anim` class — this is the gate for every entry reveal on the site.
       Reveals are hidden ONLY under html.anim, so this script decides whether
       anything is allowed to be invisible. It says yes only when the tab is
       actually visible, IntersectionObserver exists to bring content back, and
@@ -62,14 +62,13 @@ export const viewport: Viewport = {
       background-tab path simply never adds `anim`, and the content is
       visible from the first byte. Same for JS being disabled entirely.
 
-   3. a dead-man's switch. If `anim` is set but RevealRoot never mounts —
+   2. a dead-man's switch. If `anim` is set but RevealRoot never mounts —
       a hydration failure, a bundle that 404s — nothing would ever add
       `is-in` and the page would stay hidden. So the script disarms itself
       after three seconds unless RevealRoot has reported in. The worst case
       degrades to "everything visible, no animation" rather than a blank
       page. */
 const BOOT_SCRIPT = `try{var d=document,e=d.documentElement;
-e.dataset.stage=location.pathname==="/"?"dark":"light";
 if(d.visibilityState==="visible"&&"IntersectionObserver" in window&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
 e.classList.add("anim");
 setTimeout(function(){if(e.dataset.revealReady!=="1")e.classList.remove("anim")},3000)}
@@ -77,13 +76,11 @@ setTimeout(function(){if(e.dataset.revealReady!=="1")e.classList.remove("anim")}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // suppressHydrationWarning is required, not incidental. STAGE_SCRIPT runs
-    // before React hydrates and stamps data-stage onto <html>, so the server
-    // markup (no attribute) and the live DOM (attribute set) necessarily
-    // disagree. The alternative is a flash of the wrong background on every
-    // load. This suppresses the warning for this element's own attributes
-    // only — one level deep — so genuine mismatches anywhere inside the tree
-    // are still reported.
+    // suppressHydrationWarning is required, not incidental. BOOT_SCRIPT runs
+    // before React hydrates and adds the `anim` class to <html>, so the
+    // server markup and the live DOM necessarily disagree on that attribute.
+    // This suppresses the warning for this element's own attributes only —
+    // one level deep — so genuine mismatches inside the tree still report.
     <html
       lang="en"
       className={GeistMono.variable}
@@ -117,13 +114,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
         <link
           rel="stylesheet"
-          href="https://api.fontshare.com/v2/css?f%5B%5D=switzer@400,500,600,700&display=swap"
+          href="https://api.fontshare.com/v2/css?f%5B%5D=switzer@300,400,500,600,700&display=swap"
         />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <StructuredData />
       </head>
       <body className="antialiased">
-        <StageRoot />
         <RevealRoot />
         <SmoothScroll>
           <Nav />
