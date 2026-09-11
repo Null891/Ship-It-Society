@@ -19,27 +19,34 @@
                week off the meeting cadence), and because the calendar
                prints windows as whole days: day 1 is all of the start date.
 
-     Deadline  23:59 local on the `end` date, read with the entry's own
-               explicit offset. That is exactly deadlineOf() in
-               content/club.ts; it is restated here only because this module
-               must not import runtime values. The schedule test asserts the
-               two agree for every entry, and that each offset is the real
-               Pacific offset on that date.
+     Deadline  23:59 local on the `end` date, resolved through the zone like
+               every other wall time. content/club.ts also carries a written
+               offset for each entry (deadlineOf); the schedule test asserts
+               the two agree, which catches a hand-typed -07:00 in winter.
 
      Status    planned  before kickoff
                running  from kickoff (inclusive) to the deadline (exclusive)
                complete from the deadline on
 
      Days      A window's length is its inclusive count of local dates.
+               Day 1 is the start date; the last day is the end date.
 
      Meetings  Every `cadenceDays` from the anchor, at the anchor's local
                wall-clock time. A meeting stops being "next" the instant it
                starts; the content has no end time to hold it open longer.
+               Dates listed in `skip` are stepped over without moving the
+               cadence. Meetings are only projected up to the season's final
+               deadline: past that point the content file has nothing to say,
+               and a stale file should go quiet rather than invent a date.
    ========================================================================== */
 
 import type { SeasonEntry } from "@/content/club";
 
 export const ZONE = "America/Los_Angeles";
+/** How the zone is printed beside a time. */
+export const ZONE_LABEL = "PT";
+/** "Every other week", in days. The anchor is content's meeting.nextMeeting. */
+export const MEETING_CADENCE_DAYS = 14;
 
 const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;
@@ -49,7 +56,12 @@ export type SeasonState = "before" | "running" | "between" | "after";
 export type EventKind = "meeting" | "deadline" | "kickoff";
 
 /** The parts of content's `meeting` this module needs. */
-export type MeetingSource = { room: string; nextMeeting: string };
+export type MeetingSource = {
+  room: string;
+  nextMeeting: string;
+  /** Local dates (YYYY-MM-DD) on the cadence when the club does not meet. */
+  skip?: readonly string[];
+};
 
 export type ScheduleEvent = {
   kind: EventKind;
@@ -149,46 +161,59 @@ export function localDate(at: Date, timeZone = ZONE): string {
 /**
  * The instant a wall-clock time happens in a zone, DST-aware.
  *
- * Treat the wall time as if it were UTC, look up the zone's real offset near
- * that guess, correct, and look again: the second look only matters on the
- * two days a year when the offset changes between the guess and the answer.
- * Matches Temporal's "compatible" rule at the edges — a time skipped by the
- * spring-forward gap resolves an hour later, and a time repeated by the
- * fall-back overlap resolves to its first occurrence.
+ * Read the wall time as if it were UTC (the "guess"); the real instant is
+ * within a day of it. Sample the zone's offset a day either side — the two
+ * only differ when a DST change is near — and keep whichever offset gives
+ * back the same wall time. The edges follow Temporal's "compatible" rule:
+ * a time repeated by the fall-back overlap resolves to its first
+ * occurrence, and a time skipped by the spring-forward gap resolves to the
+ * same distance past the gap (02:30 becomes 03:30).
  */
 export function localInstant(date: string, time: string, timeZone = ZONE): Date {
   const [y, mo, d] = parseDate(date);
   const [h, mi] = parseTime(time);
   const guess = Date.UTC(y, mo - 1, d, h, mi);
-  const first = guess - zoneOffsetMinutes(new Date(guess), timeZone) * MINUTE_MS;
-  const second = guess - zoneOffsetMinutes(new Date(first), timeZone) * MINUTE_MS;
-  const p = zonedParts(new Date(second), timeZone);
-  return new Date(p.hour === h && p.minute === mi ? second : first);
+  const before = zoneOffsetMinutes(new Date(guess - DAY_MS), timeZone);
+  const after = zoneOffsetMinutes(new Date(guess + DAY_MS), timeZone);
+
+  const fits = (offset: number): number | null => {
+    const t = guess - offset * MINUTE_MS;
+    const p = zonedParts(new Date(t), timeZone);
+    return p.year === y && p.month === mo && p.day === d && p.hour === h && p.minute === mi
+      ? t
+      : null;
+  };
+
+  const a = fits(before);
+  const b = after === before ? a : fits(after);
+  if (a !== null && b !== null) return new Date(Math.min(a, b));
+  if (a !== null) return new Date(a);
+  if (b !== null) return new Date(b);
+  return new Date(guess - before * MINUTE_MS);
 }
 
 /* --- Meetings ------------------------------------------------------------- */
 
-/**
- * The next meeting strictly after `now`: the anchor's local date stepped by
- * `cadenceDays`, at the anchor's local wall-clock time. 12:15 stays 12:15
- * across the DST change even though the UTC instant moves an hour.
- */
-export function nextMeeting(
-  now: Date,
-  anchorISO: string,
-  cadenceDays = 14,
-  timeZone = ZONE,
-): Date {
-  return meetingsFrom(now, anchorISO, 1, cadenceDays, timeZone)[0];
-}
+export type MeetingOptions = {
+  /** Local dates on the cadence when there is no meeting. */
+  skip?: readonly string[];
+  /** Project no meeting later than this instant. */
+  until?: Date | null;
+  timeZone?: string;
+};
 
-/** The next `count` meetings strictly after `now`. */
+/**
+ * The next `count` meetings strictly after `now`: the anchor's local date
+ * stepped by `cadenceDays`, at the anchor's local wall-clock time. 12:15
+ * stays 12:15 across the DST change even though the UTC instant moves an
+ * hour. May return fewer than `count` when `until` cuts the run short.
+ */
 export function meetingsFrom(
   now: Date,
   anchorISO: string,
   count: number,
-  cadenceDays = 14,
-  timeZone = ZONE,
+  cadenceDays = MEETING_CADENCE_DAYS,
+  options: MeetingOptions = {},
 ): Date[] {
   const anchor = new Date(anchorISO);
   if (Number.isNaN(anchor.getTime())) {
@@ -196,18 +221,41 @@ export function meetingsFrom(
   }
   if (!(cadenceDays > 0)) throw new Error("schedule: cadence must be positive");
 
+  const timeZone = options.timeZone ?? ZONE;
+  const skip = new Set(options.skip ?? []);
+  const until = options.until?.getTime() ?? Infinity;
   const anchorDate = localDate(anchor, timeZone);
   const wall = zonedParts(anchor, timeZone);
   const time = `${pad(wall.hour)}:${pad(wall.minute)}`;
-  const at = (k: number) => localInstant(addDays(anchorDate, k * cadenceDays), time, timeZone);
 
-  // Jump straight to the right step instead of walking from the anchor,
-  // then settle: at most one extra step when today's meeting has started.
+  // Jump straight to the first step on or after today instead of walking
+  // from the anchor. Steps before the anchor never exist.
   const elapsed = dayNumber(localDate(now, timeZone)) - dayNumber(anchorDate);
   let k = Math.max(0, Math.ceil(elapsed / cadenceDays));
-  while (at(k).getTime() <= now.getTime()) k++;
 
-  return Array.from({ length: Math.max(0, count) }, (_, i) => at(k + i));
+  const out: Date[] = [];
+  const want = Math.max(0, count);
+  // Bounded: skipped dates are rare, so this never needs more than a few
+  // extra steps. The cap only exists so a bad skip list cannot spin.
+  for (let guard = 0; out.length < want && guard < want + 366; guard++, k++) {
+    const date = addDays(anchorDate, k * cadenceDays);
+    if (skip.has(date)) continue;
+    const at = localInstant(date, time, timeZone);
+    if (at.getTime() <= now.getTime()) continue;
+    if (at.getTime() > until) break;
+    out.push(at);
+  }
+  return out;
+}
+
+/** The next meeting strictly after `now`, or null if `until` has passed. */
+export function nextMeeting(
+  now: Date,
+  anchorISO: string,
+  cadenceDays = MEETING_CADENCE_DAYS,
+  options: MeetingOptions = {},
+): Date | null {
+  return meetingsFrom(now, anchorISO, 1, cadenceDays, options)[0] ?? null;
 }
 
 /* --- Cycles --------------------------------------------------------------- */
@@ -217,9 +265,9 @@ export function kickoffAt(entry: SeasonEntry, timeZone = ZONE): Date {
   return localInstant(entry.start, "00:00", timeZone);
 }
 
-/** When submissions close: 23:59 on the end date, as deadlineOf() defines it. */
-export function deadlineAt(entry: SeasonEntry): Date {
-  return new Date(`${entry.end}T23:59:00${entry.utcOffset}`);
+/** When submissions close: 23:59 local on the end date. */
+export function deadlineAt(entry: SeasonEntry, timeZone = ZONE): Date {
+  return localInstant(entry.end, "23:59", timeZone);
 }
 
 export function cycleStatus(entry: SeasonEntry, now: Date): CycleStatus {
@@ -234,23 +282,30 @@ export function cycleLength(entry: SeasonEntry): number {
   return dayNumber(entry.end) - dayNumber(entry.start) + 1;
 }
 
-/** Which day of its window `now` falls on, clamped to 1..total. */
+/**
+ * Which day of its window `now` falls on. 0 before kickoff, `total` once
+ * complete, so a caller can print it for any status without lying.
+ */
 export function cycleDay(
   entry: SeasonEntry,
   now: Date,
   timeZone = ZONE,
 ): { day: number; total: number } {
   const total = cycleLength(entry);
+  const status = cycleStatus(entry, now);
+  if (status === "planned") return { day: 0, total };
+  if (status === "complete") return { day: total, total };
   const raw = dayNumber(localDate(now, timeZone)) - dayNumber(entry.start) + 1;
   return { day: Math.min(total, Math.max(1, raw)), total };
 }
+
+const clamp01 = (p: number) => (p < 0 ? 0 : p > 1 ? 1 : p);
 
 /** Fraction of the window's time elapsed, kickoff to deadline, 0..1. */
 export function cycleProgress(entry: SeasonEntry, now: Date): number {
   const start = kickoffAt(entry).getTime();
   const end = deadlineAt(entry).getTime();
-  const p = (now.getTime() - start) / (end - start);
-  return p < 0 ? 0 : p > 1 ? 1 : p;
+  return clamp01((now.getTime() - start) / (end - start));
 }
 
 /** The season in kickoff order, without mutating the source. */
@@ -283,19 +338,40 @@ export function seasonState(now: Date, season: readonly SeasonEntry[]): SeasonSt
   return nextCycle(now, season) ? "between" : "after";
 }
 
+/** The first kickoff and the final deadline, or null for an empty season. */
+export function seasonBounds(
+  season: readonly SeasonEntry[],
+): { start: Date; end: Date } | null {
+  const list = ordered(season);
+  if (!list.length) return null;
+  const end = list.reduce(
+    (latest, e) => Math.max(latest, deadlineAt(e).getTime()),
+    -Infinity,
+  );
+  return { start: kickoffAt(list[0]), end: new Date(end) };
+}
+
+/** Fraction of the season elapsed, first kickoff to final deadline, 0..1. */
+export function seasonProgress(now: Date, season: readonly SeasonEntry[]): number {
+  const b = seasonBounds(season);
+  if (!b) return 1;
+  return clamp01((now.getTime() - b.start.getTime()) / (b.end.getTime() - b.start.getTime()));
+}
+
 /* --- The one target ------------------------------------------------------- */
 
 /**
  * The most useful thing to count down to: the soonest of the next meeting,
  * the running cycle's deadline, and — when no cycle is running — the next
- * kickoff. A tie goes to the cycle event.
+ * kickoff. A tie goes to the cycle event. Null once the season is over:
+ * there is nothing true left to count down to.
  */
 export function nextEvent(
   now: Date,
   season: readonly SeasonEntry[],
   meeting: MeetingSource,
-  cadenceDays = 14,
-): ScheduleEvent {
+  cadenceDays = MEETING_CADENCE_DAYS,
+): ScheduleEvent | null {
   const candidates: ScheduleEvent[] = [];
 
   const running = currentCycle(now, season);
@@ -320,15 +396,122 @@ export function nextEvent(
     }
   }
 
-  candidates.push({
-    kind: "meeting",
-    label: "Next meeting",
-    at: nextMeeting(now, meeting.nextMeeting, cadenceDays),
-    location: meeting.room || null,
-    cycle: null,
-  });
+  const bounds = seasonBounds(season);
+  if (bounds && meeting.nextMeeting) {
+    const at = nextMeeting(now, meeting.nextMeeting, cadenceDays, {
+      skip: meeting.skip,
+      until: bounds.end,
+    });
+    if (at) {
+      candidates.push({
+        kind: "meeting",
+        label: "Next meeting",
+        at,
+        location: meeting.room || null,
+        cycle: null,
+      });
+    }
+  }
 
+  if (!candidates.length) return null;
   return candidates.reduce((best, c) => (c.at.getTime() < best.at.getTime() ? c : best));
+}
+
+/* --- View models -----------------------------------------------------------
+   What the Countdown and the Calendar print, computed once here so the two
+   surfaces cannot disagree about which cycle is "current" or "next".
+   ------------------------------------------------------------------------ */
+
+export type CountdownView = {
+  state: SeasonState;
+  /** Null only when the season is over. */
+  event: ScheduleEvent | null;
+  /** The cycle the progress readouts describe: running, else next, else last. */
+  focus: SeasonEntry | null;
+  focusStatus: CycleStatus | null;
+  /** 1-based position of `focus` in the season. */
+  focusIndex: number;
+  cycles: number;
+  day: number;
+  total: number;
+  /** Time elapsed in the focus cycle, 0..1. */
+  cycleProgress: number;
+  /** Time elapsed in the season, 0..1. */
+  seasonProgress: number;
+  /** Cycles whose deadline has passed. */
+  complete: number;
+};
+
+export function countdownView(
+  now: Date,
+  season: readonly SeasonEntry[],
+  meeting: MeetingSource,
+  cadenceDays = MEETING_CADENCE_DAYS,
+): CountdownView {
+  const list = ordered(season);
+  const focus =
+    currentCycle(now, list) ?? nextCycle(now, list) ?? lastCompleteCycle(now, list);
+  const { day, total } = focus ? cycleDay(focus, now) : { day: 0, total: 0 };
+  return {
+    state: seasonState(now, list),
+    event: nextEvent(now, list, meeting, cadenceDays),
+    focus,
+    focusStatus: focus ? cycleStatus(focus, now) : null,
+    focusIndex: focus ? list.indexOf(focus) + 1 : 0,
+    cycles: list.length,
+    day,
+    total,
+    cycleProgress: focus ? cycleProgress(focus, now) : 0,
+    seasonProgress: seasonProgress(now, list),
+    complete: list.filter((e) => cycleStatus(e, now) === "complete").length,
+  };
+}
+
+export type CalendarRow = {
+  entry: SeasonEntry;
+  /** 1-based position in the season. */
+  index: number;
+  status: CycleStatus;
+  /** The soonest planned cycle. Exactly one row, or none once all have opened. */
+  next: boolean;
+  kickoff: Date;
+  deadline: Date;
+  day: number;
+  total: number;
+  progress: number;
+};
+
+export function calendarRows(now: Date, season: readonly SeasonEntry[]): CalendarRow[] {
+  const list = ordered(season);
+  const upcoming = nextCycle(now, list);
+  return list.map((entry, i) => {
+    const { day, total } = cycleDay(entry, now);
+    return {
+      entry,
+      index: i + 1,
+      status: cycleStatus(entry, now),
+      next: entry === upcoming,
+      kickoff: kickoffAt(entry),
+      deadline: deadlineAt(entry),
+      day,
+      total,
+      progress: cycleProgress(entry, now),
+    };
+  });
+}
+
+/**
+ * One cycle drawn as one lunar month: new at kickoff, full at mid-cycle, new
+ * again on the last day. Returns the phase angle as a fraction, 0..1.
+ */
+export function moonPhase(day: number, total: number): number {
+  if (total <= 1) return 0;
+  return clamp01((day - 1) / (total - 1));
+}
+
+/** Lit fraction of the disc for a phase, 0 (new) to 1 (full). */
+export function illumination(phase: number): number {
+  return (1 - Math.cos(phase * 2 * Math.PI)) / 2;
 }
 
 /* --- Display -------------------------------------------------------------
@@ -375,6 +558,27 @@ export function wallClock(at: Date, timeZone = ZONE): WallClock {
     date: `${p.year}-${pad(p.month)}-${pad(p.day)}`,
   };
 }
+
+/** A calendar date as "Sep 23". Zone-free: the date is already local. */
+export function shortDate(date: string): string {
+  const [, mo, d] = parseDate(date);
+  return `${MONTHS[mo - 1].slice(0, 3)} ${d}`;
+}
+
+/** A calendar date as "Wed, Sep 23". */
+export function weekdayDate(date: string): string {
+  const [y, mo, d] = parseDate(date);
+  const weekday = WEEKDAYS[new Date(Date.UTC(y, mo - 1, d)).getUTCDay()];
+  return `${weekday.slice(0, 3)}, ${MONTHS[mo - 1].slice(0, 3)} ${d}`;
+}
+
+/** A window as "Sep 23 – Oct 23". */
+export function windowLabel(entry: SeasonEntry): string {
+  return `${shortDate(entry.start)} – ${shortDate(entry.end)}`;
+}
+
+/** Two digits for a readout: 7 -> "07". Larger numbers are left whole. */
+export const two = pad;
 
 /** Whole days, hours, minutes and seconds from `now` until `at`, never negative. */
 export function remaining(now: Date, at: Date) {

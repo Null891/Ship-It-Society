@@ -5,9 +5,14 @@
    name, date, or dollar figure.
 
    Nothing in this file may ship as a placeholder. `npm run build` runs
-   scripts/check-placeholders.mjs, which fails the build on TODO, TBA, TBD,
-   "to come", example.com, "Fill in" and friends. The site was once rejected
+   scripts/check-placeholders.mjs first, and it fails the build on stub text
+   (the full list is at the top of that script). The site was once rejected
    from a domain registry for exactly that, so the check is not optional.
+
+   Facts are typed once and derived everywhere else: the FAQ, the join steps
+   and the page descriptions read `meeting`, `teams`, `prizes` and `season`
+   rather than restating them, so changing a fact here changes every sentence
+   that mentions it.
 
    Voice: short declaratives. No exclamation marks. No hype words.
    ========================================================================== */
@@ -200,9 +205,10 @@ export const security = {
 };
 
 /* --- Prizes ---------------------------------------------------------------
-   Deliberately no dollar figures. The pool is sponsor-funded and set per
-   hackathon, and an unfilled number reads worse than no number at all.
-   To show amounts later, add `amount` back to each tier and render it.
+   Per hackathon, in whole dollars of `currency`. The amounts are real and
+   sponsor-funded; change them here and the prize table, the FAQ and the
+   structured data all follow. Never set an amount to 0 to mean "unknown" —
+   remove the tier instead.
    ------------------------------------------------------------------------- */
 
 export const prizes = {
@@ -271,19 +277,27 @@ export function deadlineOf(entry: SeasonEntry): string {
   return `${entry.end}T23:59:00${entry.utcOffset}`;
 }
 
+/* --- Meetings -------------------------------------------------------------
+   `nextMeeting` is the ANCHOR: any one real meeting, as an ISO instant with
+   its offset. lib/schedule.ts steps it forward every 14 days at the same
+   wall-clock time to find the next one, so it never needs updating unless
+   the day, the time or the cadence changes.
+   ------------------------------------------------------------------------- */
+
 export const meeting = {
   cadence: "Every other week",
   time: "Lunch, 12:15 PM",
-  /** Set once a room is assigned; "" hides the line rather than printing a placeholder. */
+  /** The room. "" hides it everywhere rather than printing a stub. */
   room: "A-104",
   nextMeeting: "2026-09-23T12:15:00-07:00",
 };
 
 /**
- * The one meeting string every surface prints. Empty parts drop out, so an
- * unassigned room shows "Every other week · 1:30 - 2:10 PM" rather than a
- * dangling "· Room TBD". Footer, /join, /team, /hackathons and the countdown
- * all render this, so they cannot drift apart the way they previously did.
+ * The one meeting string every surface prints. Empty parts drop out, so with
+ * no room set it reads "Every other week · Lunch, 12:15 PM" and never ends
+ * in a dangling separator. The footer, /join, /hackathons, the countdown and
+ * the FAQ all derive from this or from `meeting`, so they cannot drift apart
+ * the way they previously did.
  */
 export const meetingLine = [meeting.cadence, meeting.time, meeting.room]
   .filter(Boolean)
@@ -341,6 +355,11 @@ export const hackathonsPage = {
   title: ["One month.", "Idea to shipped."],
   standfirst:
     "Every hackathon runs the same thirty days. Officers run each one end to end, and the deadline never moves.",
+  /** Search and share snippet. Derived, so it follows the season. */
+  meta: {
+    title: "Hackathons",
+    description: `The format, the season calendar and the prizes. ${season.length} hackathons, ${short(season[0].start)} to ${short(season[season.length - 1].end)}, each one idea to deployed product with a security review before launch.`,
+  },
 };
 
 /* --- Teams ----------------------------------------------------------------
@@ -376,40 +395,54 @@ export const about = {
   ],
 };
 
-/* --- Join ----------------------------------------------------------------- */
+/* --- Join -----------------------------------------------------------------
+   Two phrases are shared with the FAQ, so they are typed once here.
+   ------------------------------------------------------------------------- */
+
+/** How long an applicant waits for an officer's email. */
+const replyWindow = "within a week";
+/** What a member needs to bring. */
+const deviceNote = "A laptop or Chromebook is enough.";
+const joinStandfirst =
+  "You do not need to have built anything before. You do need to show up for one month and finish what you start.";
 
 export const join = {
   eyebrow: "Join",
   title: ["No experience required.", "Effort is."],
   headline: "No experience required. Effort is.",
-  standfirst:
-    "You do not need to have built anything before. You do need to show up for one month and finish what you start.",
+  standfirst: joinStandfirst,
+  /** Search and share snippet. */
+  meta: {
+    title: hero.primaryCta.label,
+    description: `Apply to ${club.name} at ${club.school}. ${joinStandfirst}`,
+  },
   points: [
     "Open to every grade.",
     "No application fee and no prerequisites.",
-    "Bring your own device. A laptop or Chromebook is enough.",
-    "The club runs on Discord. The invite comes with your acceptance.",
+    `Bring your own device. ${deviceNote}`,
+    "The club Discord is open to anyone, before or after you apply.",
     "Come to one meeting before you commit. See whether the format suits you.",
   ],
   /** What happens after you press send. Each step is a fact stated elsewhere
    *  on the site; keep them in sync if the process changes. */
   after: [
     { step: "01", title: "Confirmation", detail: "You see a confirmation as soon as the application sends." },
-    { step: "02", title: "A reply", detail: "An officer reads it and replies by email within a week." },
-    { step: "03", title: "Discord", detail: "Join the club Discord. It is open to everyone, before or after applying." },
+    { step: "02", title: "A reply", detail: `An officer reads it and replies by email ${replyWindow}.` },
+    { step: "03", title: "Discord", detail: "Join the club Discord. It is open to anyone, before or after applying." },
     { step: "04", title: "Next meeting", detail: `Come to the next meeting. ${meetingLine}.` },
     { step: "05", title: "Kickoff", detail: `Build solo or form a team of up to ${teams.max}. Teams lock on day 1.` },
   ],
   success: {
     title: "Application received.",
-    body: "We read every one. Expect a reply within a week, and come to the next meeting either way.",
+    body: `We read every one. Expect a reply ${replyWindow}, and come to the next meeting either way.`,
   },
 };
 
 /* --- What you will learn --------------------------------------------------
-   The club gives people the tools to build and ship. Each item names one
-   tool, and the last one is the point of the club: the work does not count
-   until it is live.
+   Four concrete skills a member leaves with. The premise, the format and
+   the security section already say what the club DOES; this list says what
+   a member can do afterward that they could not do before. Each one maps to
+   a step in the format, but none of them restates it.
    ------------------------------------------------------------------------- */
 
 export const learn = {
@@ -419,62 +452,105 @@ export const learn = {
     "The point of this club is not the club. It is what you can build with it afterward.",
   items: [
     {
-      term: "AI-assisted building",
+      term: "Git as a team",
       detail:
-        "Using AI tooling the way working engineers do: to move through the solved parts, so your time goes to the parts that are not.",
+        "Branches, commits and pull requests on one shared repo, so a whole team can work on the same code without overwriting each other.",
     },
     {
-      term: "Real deployment",
+      term: "Reviewing AI output",
       detail:
-        "Repos, deploys, and a live URL. Your project exists outside your laptop, and anyone with the link can use it.",
+        "Asking an AI tool for one specific change, then reading the diff before you accept it. You answer for every line that ships.",
     },
     {
-      term: "Security review",
+      term: "Triaging a finding",
       detail:
-        "Finding the holes before a stranger does. The same checks a professional team clears before launch.",
+        "Reading a scanner report, deciding whether a finding is real, and writing the smallest fix that closes it.",
     },
     {
-      term: "Shipping",
+      term: "Running in production",
       detail:
-        "Cutting scope to hit a date, and finishing. The skill is the launch, not the slides.",
+        "Environment variables, build logs and a live domain. Knowing what to check when it works on your laptop and fails online.",
     },
   ],
 };
 
 /* --- FAQ -------------------------------------------------------------------
-   Written from the questions the officers actually get. New questions go in
-   here rather than anywhere else on the site, so every answer has one home.
+   Written from the questions the officers actually get, and capped at ten.
+   New questions go in here rather than anywhere else on the site, so every
+   answer has one home.
+
+   Any answer that states a fact reads it from the objects above — meeting,
+   teams, prizes, join — so it cannot contradict the page it summarises.
+   `link` is optional: where the answer continues, rendered after it. The
+   whole list is also published as FAQPage structured data.
    ------------------------------------------------------------------------- */
+
+export type FaqItem = {
+  q: string;
+  a: string;
+  link?: { label: string; href: string };
+};
+
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight"];
+const inWords = (n: number) => NUMBER_WORDS[n] ?? String(n);
+
+/** "$100". Prizes are whole amounts, paid in cash. */
+const money = (amount: number) =>
+  prizes.currency === "USD" ? `$${amount}` : `${amount} ${prizes.currency}`;
+
+const faqItems: (FaqItem | null)[] = [
+  {
+    q: "Where and when do you meet?",
+    a: `${meeting.cadence}${meeting.room ? `, in room ${meeting.room}` : ""}. ${meeting.time}. Bring your food.`,
+  },
+  {
+    q: "Do I need to know how to code?",
+    a: `No. ${join.standfirst}`,
+  },
+  {
+    q: "How much time does a hackathon take?",
+    a: `One month from kickoff to demo. Meetings take one lunch period, ${meeting.cadence.toLowerCase()}. The build fits around your schedule; the deadline does not move.`,
+  },
+  {
+    q: "Can I join with a friend?",
+    a: `Yes. Apply separately, then form your team at kickoff: solo, or two to ${inWords(teams.max)} people. Teams lock on day 1, so the team that starts is the team that ships.`,
+  },
+  {
+    q: "What can I win?",
+    a: `${prizes.tiers.map((t) => `${t.title} ${money(t.amount)}`).join(", ")}, every hackathon, paid in cash by the club's sponsors. ${prizes.rules[1]} ${prizes.rules[2]}`,
+  },
+  {
+    q: "What happens after I apply?",
+    a: `${join.after[0].detail} ${join.after[1].detail} Then join the Discord, come to the next meeting, and build from kickoff.`,
+    link: { label: "Every step, on the Join page", href: "/join" },
+  },
+  {
+    // Keep in step with lib/apply.ts: five required fields, one optional.
+    q: "Why does the application ask for my email?",
+    a: `So an officer can reply. Every application gets an answer by email ${replyWindow}. The form also asks for your name, grade, experience and a line on why you want to join; a project idea is optional.`,
+  },
+  {
+    q: "Do I need my own laptop?",
+    a: `Yes, bring your own device. ${deviceNote}`,
+  },
+  club.discord
+    ? {
+        q: "Where do we talk between meetings?",
+        a: "On the club Discord. It is open to anyone, before or after you apply. Specs get reviewed there, findings get cleared, and demo links go out.",
+        link: { label: "Join the Discord", href: club.discord },
+      }
+    : null,
+  {
+    q: "Can I give a talk, or donate to the club?",
+    a: "Yes. Each has a short form on the Get involved page: offer a talk or a workshop at a meeting, or donate a prize or a gift. An officer replies by email to arrange it.",
+    link: { label: "Get involved", href: "/get-involved" },
+  },
+];
 
 export const faq = {
   eyebrow: "FAQ",
   headline: ["Asked often.", "Answered once."],
-  items: [
-    {
-      q: "Where and when do you meet?",
-      a: "Every other week during lunch in room A-104. Bring your food, not a permission slip.",
-    },
-    {
-      q: "Why does the application ask for my email?",
-      a: "So we can reply with your acceptance and the Discord invite. It is the one field we cannot do without.",
-    },
-    {
-      q: "Can I join with a friend?",
-      a: "Yes, and you can compete as a team. Apply separately so we can track both applications, then name your team at kickoff.",
-    },
-    {
-      q: "How much time does a hackathon take?",
-      a: "The meetings run one lunch period every other week. The build itself fits around your schedule; the deadline does not.",
-    },
-    {
-      q: "Do I need my own laptop?",
-      a: "Bring your own device if you have one. A laptop or Chromebook is enough, and the library lends them when you do not have one.",
-    },
-    {
-      q: "Where do we talk between meetings?",
-      a: "The club runs on Discord. It is where specs get reviewed, findings get cleared, and the demo link goes out. The invite is in the footer.",
-    },
-  ],
+  items: faqItems.filter((item): item is FaqItem => item !== null),
 };
 
 /* --- Footer --------------------------------------------------------------- */

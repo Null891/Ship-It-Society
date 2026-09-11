@@ -19,9 +19,11 @@ const EXT = new Set([".ts", ".tsx", ".css"]);
 
 /** Each needs a reason. If you add one, say why it is not a real placeholder. */
 const ALLOW = [
-  // React's own attribute, and our styling hook for it.
+  // React's own attribute, and our styling hooks for it (Tailwind variant,
+  // CSS pseudo-element).
   /placeholder[=:]/,
   /placeholder:text-/,
+  /::placeholder/,
   // Prose in comments explaining this very check.
   /check-placeholders/,
 ];
@@ -31,7 +33,12 @@ const PATTERNS = [
   { re: /\bFIXME\b/, name: "FIXME" },
   { re: /\bTBA\b/, name: "TBA" },
   { re: /\bTBD\b/, name: "TBD" },
-  { re: /\bto come\b/i, name: '"to come"' },
+  // "Name to come", "details to come" — but not ordinary phrasal verbs like
+  // "come off it" or "come back", which are real copy.
+  {
+    re: /\bto come\b(?!\s+(?:off|back|out|up|in|over|through|along|across|down|home|together|to|from|with))/i,
+    name: '"to come"',
+  },
   { re: /\bLorem\b/i, name: "Lorem" },
   { re: /\bFill in\b/i, name: '"Fill in"' },
   { re: /\bComing soon\b/i, name: '"Coming soon"' },

@@ -1,149 +1,166 @@
+import "server-only";
 import { Resend } from "resend";
-import { EXPERIENCE, type Application } from "@/lib/apply";
 
 /* ==========================================================================
    Delivery. Server only — never import this from a client component.
 
-   Two independent sinks: an email so an officer knows immediately, and a
-   spreadsheet row so the board has a reviewable record. They are attempted
-   together and reported separately, so one being misconfigured never costs
-   you an application.
+   Every form on the site (the application, and the four built-in forms that
+   replaced the club's Google Forms) lands in the same two places:
+
+     email   Resend -> APPLY_TO_EMAIL, so an officer knows immediately
+     sheet   the club's Google Sheet via its Apps Script web app, so the
+             board has a reviewable record
+
+   Both are attempted together and judged separately, so one misconfigured
+   channel never costs a submission. The response to the visitor never says
+   which channels exist or which of them worked.
+
+   Environment (names are a contract with SETUP.md — do not rename):
+     RESEND_API_KEY, APPLY_TO_EMAIL, APPLY_FROM_EMAIL,
+     GOOGLE_SHEETS_WEBHOOK_URL, GOOGLE_SHEETS_SECRET
    ========================================================================== */
 
-export type DeliveryResult = {
-  email: "sent" | "skipped" | "failed";
-  sheet: "sent" | "skipped" | "failed";
+/** One labelled answer. `long` answers print as a block in the email. */
+export type Row = { key: string; label: string; value: string | string[] | undefined; long?: boolean };
+
+export type Submission = {
+  /** Form id, sent to the sheet so the Apps Script can route it. */
+  form: string;
+  /** What it is called in the inbox: "New <label> — <name>". */
+  label: string;
+  /** Name if given, else email — the second half of the subject. */
+  who: string;
+  /** Where "Reply" in the officer's mail client goes. */
+  replyTo?: string;
+  rows: Row[];
 };
 
-const experienceLabel = (v: Application["experience"]) =>
-  EXPERIENCE.find((e) => e.value === v)?.label ?? v;
+export type DeliveryOutcome =
+  /** At least one configured channel took it. */
+  | "delivered"
+  /** Channels are configured and every one of them failed. */
+  | "failed"
+  /** Production, and nothing is configured to receive it. */
+  | "unavailable"
+  /** Development or preview with nothing configured: accepted, not stored. */
+  | "unstored";
 
-function plainText(app: Application) {
+const flat = (v: Row["value"]) => (Array.isArray(v) ? v.join(", ") : (v ?? ""));
+
+/** Strip anything that could end a header line. Resend takes JSON, but a
+ *  name with a newline in it has no business in a subject either way. */
+const headerSafe = (s: string) => s.replace(/[\r\n\u0000-\u001f\u007f]+/g, " ").trim();
+
+function plainText(sub: Submission, receivedAt: Date) {
+  const short = sub.rows.filter((r) => !r.long);
+  const long = sub.rows.filter((r) => r.long);
+  const pad = Math.max(...short.map((r) => r.label.length), 0) + 2;
+  const title = `New ${sub.label}`;
   return [
-    `Name:       ${app.name}`,
-    `Email:      ${app.email}`,
-    `Grade:      ${app.grade}`,
-    `Experience: ${experienceLabel(app.experience)}`,
+    title,
+    "=".repeat(title.length),
     "",
-    "Why they want to join",
-    "---------------------",
-    app.why,
-    ...(app.idea
-      ? ["", "Something they want to build", "---------------------", app.idea]
-      : []),
+    ...short.map((r) => `${`${r.label}:`.padEnd(pad)}${flat(r.value) || "—"}`),
+    ...long.flatMap((r) => ["", r.label, "-".repeat(r.label.length), flat(r.value) || "—"]),
     "",
-    `Received ${new Date().toLocaleString("en-US", {
+    `Received ${receivedAt.toLocaleString("en-US", {
       timeZone: "America/Los_Angeles",
-    })} PT`,
+      dateStyle: "medium",
+      timeStyle: "short",
+    })} Pacific.`,
   ].join("\n");
 }
 
-async function sendEmail(app: Application): Promise<"sent" | "skipped"> {
-  const key = process.env.RESEND_API_KEY;
-  const to = process.env.APPLY_TO_EMAIL;
-  if (!key || !to) return "skipped";
+function emailConfigured() {
+  return Boolean(process.env.RESEND_API_KEY && process.env.APPLY_TO_EMAIL);
+}
 
-  const resend = new Resend(key);
+function sheetConfigured() {
+  return Boolean(process.env.GOOGLE_SHEETS_WEBHOOK_URL);
+}
+
+async function sendEmail(sub: Submission, receivedAt: Date): Promise<void> {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const { error } = await resend.emails.send({
     // Resend's shared sender works with no domain set up. Swap it for an
     // address on your own domain once you have one verified.
-    from: process.env.APPLY_FROM_EMAIL ?? "Ship It Society <onboarding@resend.dev>",
-    to: to.split(",").map((s) => s.trim()),
-    replyTo: app.email,
-    subject: `New application — ${app.name} (grade ${app.grade})`,
-    text: plainText(app),
+    from: process.env.APPLY_FROM_EMAIL || "Ship It Society <onboarding@resend.dev>",
+    to: (process.env.APPLY_TO_EMAIL ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    ...(sub.replyTo ? { replyTo: sub.replyTo } : {}),
+    subject: headerSafe(`New ${sub.label} — ${sub.who}`),
+    text: plainText(sub, receivedAt),
   });
-
-  if (error) throw new Error(error.message);
-  return "sent";
+  if (error) throw new Error(`Resend: ${error.message}`);
 }
 
-async function appendToSheet(app: Application): Promise<"sent" | "skipped"> {
-  const url = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
-  if (!url) return "skipped";
-
-  const res = await fetch(url, {
+async function appendToSheet(sub: Submission, receivedAt: Date): Promise<void> {
+  const secret = process.env.GOOGLE_SHEETS_SECRET ?? "";
+  if (!secret) {
+    console.warn("[forms] GOOGLE_SHEETS_SECRET is not set; the sheet will refuse this row if its script expects one.");
+  }
+  const res = await fetch(process.env.GOOGLE_SHEETS_WEBHOOK_URL as string, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      receivedAt: new Date().toISOString(),
-      name: app.name,
-      email: app.email,
-      grade: app.grade,
-      experience: experienceLabel(app.experience),
-      why: app.why,
-      idea: app.idea ?? "",
-      secret: process.env.GOOGLE_SHEETS_SECRET ?? "",
+      secret,
+      form: sub.form,
+      submittedAt: receivedAt.toISOString(),
+      fields: Object.fromEntries(sub.rows.map((r) => [r.key, flat(r.value)])),
     }),
     // Apps Script is slow to cold start; do not hang the request forever.
     signal: AbortSignal.timeout(8000),
+    cache: "no-store",
   });
+  /* A wrong secret still comes back 200 — the script answers "forbidden"
+     in the body. Only the literal "ok" counts as stored. */
+  const body = (await res.text()).trim();
+  if (!res.ok || body !== "ok") {
+    throw new Error(`Sheets webhook answered ${res.status} "${body.slice(0, 40)}"`);
+  }
+}
 
-  if (!res.ok) throw new Error(`Sheets webhook returned ${res.status}`);
-  return "sent";
+/** Production means the real site: Vercel's production environment, or a
+ *  plain `next start` anywhere else. Preview deployments are not. */
+function isProduction() {
+  const vercel = process.env.VERCEL_ENV;
+  return vercel ? vercel === "production" : process.env.NODE_ENV === "production";
 }
 
 /**
- * Attempt both sinks. Resolves as long as at least one succeeded or was
- * deliberately skipped; throws only when everything configured has failed.
+ * Deliver a validated submission to every configured channel.
+ * Never throws; the route turns the outcome into a status code.
  */
-export async function deliver(app: Application): Promise<DeliveryResult> {
-  const [email, sheet] = await Promise.allSettled([
-    sendEmail(app),
-    appendToSheet(app),
-  ]);
+export async function deliver(sub: Submission): Promise<DeliveryOutcome> {
+  const receivedAt = new Date();
+  const channels: { name: string; run: () => Promise<void> }[] = [];
+  if (emailConfigured()) channels.push({ name: "email", run: () => sendEmail(sub, receivedAt) });
+  if (sheetConfigured()) channels.push({ name: "sheet", run: () => appendToSheet(sub, receivedAt) });
 
-  const result: DeliveryResult = {
-    email: email.status === "fulfilled" ? email.value : "failed",
-    sheet: sheet.status === "fulfilled" ? sheet.value : "failed",
-  };
-
-  if (email.status === "rejected") {
-    console.error("[apply] email delivery failed:", email.reason);
-  }
-  if (sheet.status === "rejected") {
-    console.error("[apply] sheet delivery failed:", sheet.reason);
-  }
-
-  const anyConfigured = result.email !== "skipped" || result.sheet !== "skipped";
-  const anySucceeded = result.email === "sent" || result.sheet === "sent";
-
-  // Nothing configured at all: accept in development so the form is testable,
-  // but make the gap loud in the log rather than silently dropping people.
-  if (!anyConfigured) {
-    console.warn(
-      `[apply] No delivery configured. Application from ${app.email} was NOT stored.\n` +
-        "Set RESEND_API_KEY + APPLY_TO_EMAIL and/or GOOGLE_SHEETS_WEBHOOK_URL. See SETUP.md.",
-    );
-    return result;
-  }
-
-  if (!anySucceeded) throw new Error("All configured delivery methods failed");
-  return result;
-}
-
-/* --- Rate limiting --------------------------------------------------------
-   Best effort. Serverless instances do not share memory, so this throttles a
-   naive flood rather than a determined attacker; the honeypot and the schema
-   do the rest. Good enough for a club application form.
-   ------------------------------------------------------------------------- */
-
-const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 4;
-const hits = new Map<string, number[]>();
-
-export function rateLimit(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  recent.push(now);
-  hits.set(ip, recent);
-
-  // Keep the map from growing without bound on a long-lived instance.
-  if (hits.size > 500) {
-    for (const [key, times] of hits) {
-      if (times.every((t) => now - t >= WINDOW_MS)) hits.delete(key);
+  if (channels.length === 0) {
+    if (isProduction()) {
+      console.error(
+        `[forms] NO DELIVERY CONFIGURED IN PRODUCTION. A ${sub.label} was refused with 503 ` +
+          "because there is nowhere to send it. Set RESEND_API_KEY + APPLY_TO_EMAIL and/or " +
+          "GOOGLE_SHEETS_WEBHOOK_URL + GOOGLE_SHEETS_SECRET. See SETUP.md.",
+      );
+      return "unavailable";
     }
+    console.warn(
+      `[forms] No delivery configured. A ${sub.label} was accepted but NOT stored ` +
+        "(development/preview only — production refuses it). See SETUP.md.",
+    );
+    return "unstored";
   }
 
-  return recent.length <= MAX_PER_WINDOW;
+  const results = await Promise.allSettled(channels.map((c) => c.run()));
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      console.error(`[forms] ${channels[i].name} delivery failed for a ${sub.label}:`, r.reason);
+    }
+  });
+
+  return results.some((r) => r.status === "fulfilled") ? "delivered" : "failed";
 }

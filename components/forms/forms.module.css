@@ -1,0 +1,99 @@
+/* ==========================================================================
+   Form furniture that utilities cannot express cleanly: the focus line,
+   autofill, ruled textareas, the tick spinner, and the no-JavaScript
+   status panels. Colours, durations and easings are tokens only.
+   ========================================================================== */
+
+/* --- The underline -------------------------------------------------------
+   Each input has one hairline under it. On focus a 2px marigold line builds
+   across it left to right — the field's focus indicator, standing in for
+   the default ring (which would draw a box around an underline-only field).
+   It is 10.2:1 on the canvas, and it is the full width of the field. */
+.line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--color-marigold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--dur-base) var(--ease-out-expo);
+  pointer-events: none;
+}
+.control:focus-within .line {
+  transform: scaleX(1);
+}
+
+/* The field itself. Underline only; the ground shows through. */
+.input {
+  appearance: none;
+  border-radius: 0;
+  caret-color: var(--color-marigold);
+}
+.input:focus-visible {
+  /* Replaced, not removed: see .line above. */
+  outline: 2px solid transparent;
+}
+.input::placeholder {
+  color: var(--stage-subtle);
+}
+
+/* Autofill paints its own pale ground, which is a white slab on this
+   canvas. Paint the ground back over it; the text keeps its colour. */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--stage-fg);
+  -webkit-box-shadow: 0 0 0 1000px var(--ground, var(--page-bg)) inset;
+  caret-color: var(--color-marigold);
+}
+
+/* A textarea is a writing surface: faint ruled lines, one per line of
+   text, scrolling with it. Where `lh` is unsupported the whole declaration
+   is dropped and the field is simply plain. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(1lh - 1px),
+    var(--color-line-dark-soft) calc(1lh - 1px) 1lh
+  );
+  background-position: 0 0.5rem;
+  background-attachment: local;
+}
+
+/* --- The tick spinner ----------------------------------------------------
+   Eight ticks; the bright one steps round. Only mounted while sending.
+   Reduced motion stops it (globals.css collapses every animation). */
+.spinner {
+  animation: spin 800ms steps(8) infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- No-JavaScript status on a static page -------------------------------
+   The home page is static, so it cannot read the query string. A form
+   posted from it without JavaScript is redirected to a fragment instead,
+   and the matching panel shows itself with :target — no script, no
+   dynamic render. Hidden otherwise; these are status, not content. */
+.targetOnly:not(:target) {
+  display: none;
+}
+
+/* The success panel rises once when it replaces a form in the page. */
+.enter {
+  animation: rise var(--dur-xslow) var(--ease-out-expo) both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

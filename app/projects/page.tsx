@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
@@ -7,10 +8,7 @@ import { CoverPlate } from "@/components/ui/Texture";
 import { Morph } from "@/components/ui/Morph";
 import { ArchivePlate } from "@/components/ui/Plates";
 
-export const metadata: Metadata = {
-  title: "Projects",
-  description: projectsPage.standfirst,
-};
+export const metadata: Metadata = routeMetadata.projects;
 
 const COVER: Record<string, string> = {
   ink: "bg-ink",

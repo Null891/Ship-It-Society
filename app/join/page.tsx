@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/metadata";
 import { ApplyForm } from "@/components/join/ApplyForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { GatePlate } from "@/components/ui/Plates";
 import { club, join, schedule } from "@/content/club";
 
-export const metadata: Metadata = {
-  title: "Apply to join",
-  description: join.standfirst,
-};
+export const metadata: Metadata = routeMetadata.join;
 
 export default function JoinPage() {
   return (

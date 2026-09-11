@@ -1,3 +1,4 @@
+import { routeMetadata } from "@/lib/metadata";
 import { HeroSequence } from "@/components/home/HeroSequence";
 import { Countdown } from "@/components/home/Countdown";
 import { Format } from "@/components/home/Format";
@@ -13,6 +14,8 @@ import {
   SponsorRow,
   Stats,
 } from "@/components/home/Sections";
+
+export const metadata = routeMetadata.home;
 
 /* The rail's entries mirror the numbered eyebrows on each section. Ids point
    at the headings those sections are already labelled by, so nothing extra

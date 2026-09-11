@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/metadata";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Grain } from "@/components/ui/Texture";
@@ -9,11 +10,7 @@ import { Calendar } from "@/components/hackathons/Calendar";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { hackathonsPage, meetingLine, prizes, security } from "@/content/club";
 
-export const metadata: Metadata = {
-  title: "The format",
-  description:
-    "One month, idea to deployed. The schedule is fixed so the scope has to flex.",
-};
+export const metadata: Metadata = routeMetadata.hackathons;
 
 export default function HackathonsPage() {
   return (

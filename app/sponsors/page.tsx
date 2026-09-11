@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { routeMetadata } from "@/lib/metadata";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Grain } from "@/components/ui/Texture";
 import { Eyebrow } from "@/components/ui/Button";
@@ -6,10 +7,7 @@ import { Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { sponsors, sponsorPage } from "@/content/sponsors";
 import { club, prizes } from "@/content/club";
 
-export const metadata: Metadata = {
-  title: "Sponsors",
-  description: sponsorPage.standfirst,
-};
+export const metadata: Metadata = routeMetadata.sponsors;
 
 export default function SponsorsPage() {
   return (

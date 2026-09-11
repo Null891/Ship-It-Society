@@ -3,8 +3,9 @@ import { club } from "./club";
 /* ==========================================================================
    Sponsors.
 
-   logo points at an SVG in /public/brand/. With no file the lockup falls
-   back to the sponsor name set in type, which is a designed state — a
+   `logo` is a path to an SVG in /public/brand/, e.g. "/brand/argosx.svg",
+   and only a file the sponsor supplied or approved goes there. Left "", the
+   lockup sets the sponsor's name in type, which is a designed state — a
    wordmark, not a broken image.
    ========================================================================== */
 
@@ -25,7 +26,7 @@ export const sponsors: Sponsor[] = [
     blurb: "AI-assisted app building. The tooling members use to move fast in week one.",
     contribution: "Platform access for every member and part of the prize pool.",
     url: "https://base44.com",
-    logo: "", // /brand/base44.svg once we have the asset
+    logo: "",
     tier: "founding",
   },
   {
@@ -33,7 +34,7 @@ export const sponsors: Sponsor[] = [
     blurb: "Security testing. Every project passes through it before it gets a public URL.",
     contribution: "Scans for every team and part of the prize pool.",
     url: "https://getargosx.com",
-    logo: "", // /brand/argosx.svg once we have the asset
+    logo: "",
     tier: "founding",
   },
   {
@@ -41,16 +42,27 @@ export const sponsors: Sponsor[] = [
     blurb: "Backend development courses. Practical Python, Go, and servers members learn by building.",
     contribution: "Learning resources for members and part of the prize pool.",
     url: "https://www.boot.dev",
-    logo: "", // /brand/bootdev.svg once we have the asset
+    logo: "",
     tier: "supporting",
   },
 ];
 
+/** "A, B and C". */
+const listOf = (items: string[]) =>
+  items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+
+const sponsorStandfirst =
+  "Sponsorship pays for prizes and tooling. It does not buy a say in what students build.";
+
 export const sponsorPage = {
   eyebrow: "Sponsors",
   headline: "Who funds this.",
-  standfirst:
-    "Sponsorship pays for prizes and tooling. It does not buy a say in what students build.",
+  standfirst: sponsorStandfirst,
+  /** Search and share snippet. Names the sponsors, so it follows the list above. */
+  meta: {
+    title: "Sponsors",
+    description: `${listOf(sponsors.map((s) => s.name))} back ${club.name}. ${sponsorStandfirst}`,
+  },
   /* Where sponsorship goes. Mirrors each sponsor's `contribution` above —
      if a contribution changes, change this list with it. */
   funds: [
@@ -83,7 +95,7 @@ export const sponsorPage = {
       },
       {
         term: "A named prize",
-        detail: "Fund a category and judge it yourself. Most secure build is already sponsored.",
+        detail: "Fund a prize category of your own and sit on the panel that judges it.",
       },
       {
         term: "Real numbers",

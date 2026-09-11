@@ -7,15 +7,22 @@
    redirect to a third-party page and no Google branding.
 
    This file is the copy and the field list. Validation lives in lib/forms,
-   and it reads the limits from here, so the two cannot drift apart.
+   and it reads the limits from here, so the two cannot drift apart. The
+   same spec renders the form (components/forms/Form.tsx), validates it in
+   the browser and again on the server (app/api/forms/[form]/route.ts), and
+   labels every line of the email and every column of the sheet.
 
-   The membership application is separate (components/join/ApplyForm.tsx),
-   because it is the one form with its own page and its own success ticket.
+   The membership application is separate (components/join/ApplyForm.tsx,
+   lib/apply.ts), because it is the one form with its own page and its own
+   success ticket. It shares the same hardening and delivery code.
 
    Facts (meeting time, room, team size) are never typed here — components
    render them from content/club.ts next to the form.
    ========================================================================== */
 
+/* `error` is what a person reads when a required field is left empty. It is
+   written per field because a message generated from the label ("Please
+   enter your what you would cover") reads like a machine wrote it. */
 export type FieldSpec =
   | {
       name: string;
@@ -24,6 +31,7 @@ export type FieldSpec =
       required: boolean;
       max: number;
       help?: string;
+      error?: string;
       autoComplete?: string;
     }
   | {
@@ -33,6 +41,7 @@ export type FieldSpec =
       required: boolean;
       max: number;
       help?: string;
+      error?: string;
     }
   | {
       name: string;
@@ -41,12 +50,15 @@ export type FieldSpec =
       required: boolean;
       options: string[];
       help?: string;
+      error?: string;
     };
 
 export type FormId = "interest" | "speaker" | "question" | "gift";
 
 export type FormSpec = {
   id: FormId;
+  /** What the submission is called in the officers' inbox: "New <label> — <name>". */
+  label: string;
   eyebrow: string;
   title: string;
   intro: string;
@@ -58,20 +70,22 @@ export type FormSpec = {
 export const forms: Record<FormId, FormSpec> = {
   interest: {
     id: "interest",
+    label: "update-list signup",
     eyebrow: "Stay in the loop",
     title: "Not ready to apply?",
     intro:
       "Get meeting reminders and hackathon dates by email. No commitment, and you can still apply any time.",
     fields: [
-      { name: "name", label: "Name", kind: "text", required: true, max: 80, autoComplete: "name" },
-      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email" },
-      { name: "grade", label: "Grade", kind: "choice", required: true, options: ["9", "10", "11", "12"] },
+      { name: "name", label: "Name", kind: "text", required: true, max: 80, autoComplete: "name", error: "Please enter your name." },
+      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email", error: "Please enter an email we can write to." },
+      { name: "grade", label: "Grade", kind: "choice", required: true, options: ["9", "10", "11", "12"], error: "Pick your grade." },
       {
         name: "interests",
         label: "What interests you",
         kind: "multi",
         required: false,
         options: ["Building apps", "AI-assisted coding", "Security", "Design", "Just curious"],
+        help: "Pick any, or none.",
       },
     ],
     submit: "Keep me posted",
@@ -83,13 +97,14 @@ export const forms: Record<FormId, FormSpec> = {
 
   speaker: {
     id: "speaker",
+    label: "speaker offer",
     eyebrow: "Speakers",
     title: "Talk to the club.",
     intro:
       "Give a short talk or run a workshop at a meeting. Engineers, founders, designers and researchers are all welcome.",
     fields: [
-      { name: "name", label: "Name", kind: "text", required: true, max: 80, autoComplete: "name" },
-      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email" },
+      { name: "name", label: "Name", kind: "text", required: true, max: 80, autoComplete: "name", error: "Please enter your name." },
+      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email", error: "Please enter an email we can reply to." },
       {
         name: "role",
         label: "Role and organization",
@@ -104,6 +119,7 @@ export const forms: Record<FormId, FormSpec> = {
         kind: "choice",
         required: true,
         options: ["Talk", "Workshop", "Live demo", "Q&A"],
+        error: "Pick a format.",
       },
       {
         name: "topic",
@@ -112,9 +128,18 @@ export const forms: Record<FormId, FormSpec> = {
         required: true,
         max: 600,
         help: "A few sentences is plenty.",
+        error: "Tell us a little about the session.",
       },
       { name: "dates", label: "Dates that work", kind: "text", required: false, max: 120 },
-      { name: "link", label: "A link about you", kind: "url", required: false, max: 200 },
+      {
+        name: "link",
+        label: "A link about you",
+        kind: "url",
+        required: false,
+        max: 200,
+        help: "A site, a profile or a talk you have given.",
+        autoComplete: "url",
+      },
     ],
     submit: "Offer a session",
     success: {
@@ -125,13 +150,14 @@ export const forms: Record<FormId, FormSpec> = {
 
   question: {
     id: "question",
+    label: "question",
     eyebrow: "Ask",
     title: "Ask a question.",
     intro:
       "Not answered above? Ask the officers directly. We reply by email, and questions that come up often get added here.",
     fields: [
-      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email" },
-      { name: "question", label: "Your question", kind: "textarea", required: true, max: 600 },
+      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email", error: "Please enter an email we can reply to." },
+      { name: "question", label: "Your question", kind: "textarea", required: true, max: 600, error: "Please type your question." },
       { name: "name", label: "Name", kind: "text", required: false, max: 80, autoComplete: "name" },
     ],
     submit: "Send question",
@@ -143,13 +169,14 @@ export const forms: Record<FormId, FormSpec> = {
 
   gift: {
     id: "gift",
+    label: "gift offer",
     eyebrow: "Give",
     title: "Donate a prize or a gift.",
     intro:
       "Prize money, food for demo day, hardware, software credits. Tell us what you would like to give and an officer will reply to arrange it. Nothing is charged on this site.",
     fields: [
-      { name: "name", label: "Name", kind: "text", required: true, max: 80, autoComplete: "name" },
-      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email" },
+      { name: "name", label: "Name", kind: "text", required: true, max: 80, autoComplete: "name", error: "Please enter your name." },
+      { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email", error: "Please enter an email we can reply to." },
       {
         name: "organization",
         label: "Organization, if any",
@@ -164,6 +191,8 @@ export const forms: Record<FormId, FormSpec> = {
         kind: "multi",
         required: true,
         options: ["Prize money", "Food for demo day", "Hardware or gear", "Software or credits", "Something else"],
+        help: "Pick as many as apply.",
+        error: "Pick at least one.",
       },
       { name: "note", label: "Anything we should know", kind: "textarea", required: false, max: 600 },
     ],

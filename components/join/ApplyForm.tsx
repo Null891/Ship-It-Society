@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import { AnimatePresence, motion } from "motion/react";
 import {
   EXPERIENCE,
@@ -12,6 +13,7 @@ import {
   type FieldErrors,
 } from "@/lib/apply";
 import { club, join } from "@/content/club";
+import { HONEYPOT } from "@/lib/forms/shared";
 import { DUR, EASE_OUT_EXPO } from "@/lib/motion";
 
 /* ==========================================================================
@@ -62,24 +64,33 @@ export function ApplyForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [serverMessage, setServerMessage] = useState("");
 
+  /* The schema preprocesses raw input, so the form's values are the schema's
+     INPUT type and the submit handler receives its OUTPUT type. */
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<Application>({
+  } = useForm<z.input<typeof applicationSchema>, unknown, Application>({
     resolver: zodResolver(applicationSchema),
     mode: "onBlur",
   });
 
-  async function onSubmit(values: Application) {
+  async function onSubmit(values: Application, event?: React.BaseSyntheticEvent) {
+    // Read the trap straight off the submitted form, so nothing about it lives
+    // in React state or a ref.
+    const form = event?.target instanceof HTMLFormElement ? event.target : null;
+    const trap = form?.elements.namedItem(HONEYPOT);
+    const trapValue = trap instanceof HTMLInputElement ? trap.value : "";
     setStatus("sending");
     setServerMessage("");
     try {
       const res = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        // The trap travels with the submission; the server quietly accepts,
+        // without delivering, anything that filled it.
+        body: JSON.stringify({ ...values, [HONEYPOT]: trapValue }),
       });
       const data: { ok: boolean; message?: string; fields?: FieldErrors } =
         await res.json();
@@ -89,7 +100,7 @@ export function ApplyForm() {
         // student is taken to the field that needs attention.
         if (data.fields) {
           for (const [key, message] of Object.entries(data.fields)) {
-            if (message) setError(key as keyof Application, { message });
+            if (message) setError(key as Parameters<typeof setError>[0], { message });
           }
         }
         setServerMessage(data.message ?? "Something went wrong. Try again.");
@@ -130,18 +141,20 @@ export function ApplyForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="max-w-[46rem]">
-      {/* Honeypot. Hidden from people and from assistive tech; bots fill it.
-          The label is bait for autofill bots, and is never rendered to a
-          person — this block is display:none by way of being off-screen and
-          aria-hidden. */}
-      <div aria-hidden className="absolute left-[-9999px] h-px w-px overflow-hidden">
-        <label htmlFor={`${uid}-company`}>Leave this field empty</label>
+      {/* The trap field. It used to be called "company", which read as a real
+          question to anyone who met it and invited autofill. It now has a
+          meaningless name, sits off-screen, is out of the tab order, and is
+          hidden from assistive tech along with its label. People never see
+          it; scripts that fill every input do. */}
+      <div aria-hidden className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+        <label htmlFor={`${uid}-trap`}>Leave blank</label>
         <input
-          id={`${uid}-company`}
+          id={`${uid}-trap`}
+          name={HONEYPOT}
           type="text"
           tabIndex={-1}
           autoComplete="off"
-          {...register("company")}
+          defaultValue=""
         />
       </div>
 
