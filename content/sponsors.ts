@@ -51,6 +51,22 @@ export const sponsorPage = {
   headline: "Who funds this.",
   standfirst:
     "Sponsorship pays for prizes and tooling. It does not buy a say in what students build.",
+  /* Where sponsorship goes. Mirrors each sponsor's `contribution` above —
+     if a contribution changes, change this list with it. */
+  funds: [
+    {
+      term: "Prize pool",
+      detail: "Every sponsor puts part of their support into the cash prizes for each hackathon.",
+    },
+    {
+      term: "Build tooling",
+      detail: "Base44 platform access for every member, and boot.dev courses to learn with.",
+    },
+    {
+      term: "Security scans",
+      detail: "ArgosX scans for every team, so nothing ships without a review.",
+    },
+  ],
   pitch: {
     eyebrow: "Become a sponsor",
     headline: "What sponsorship gets you.",
