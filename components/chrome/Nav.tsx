@@ -18,8 +18,9 @@ const LINKS = [
   { href: "/hackathons", label: "Format" },
   { href: "/handbook", label: "Handbook" },
   ...(projects.length > 0 ? [{ href: "/projects", label: "Projects" }] : []),
-  { href: "/team", label: "Team" },
+  { href: "/about", label: "About" },
   { href: "/sponsors", label: "Sponsors" },
+  { href: "/get-involved", label: "Get involved" },
 ];
 
 const FOCUSABLE =
@@ -105,9 +106,9 @@ export function Nav() {
       }
     };
 
-    // The panel and trigger are md:hidden. Without this, rotating a tablet to
+    // The panel and trigger are lg:hidden. Without this, rotating a tablet to
     // landscape left an invisible open menu holding the scroll lock.
-    const wide = window.matchMedia("(min-width: 768px)");
+    const wide = window.matchMedia("(min-width: 1024px)");
     const onWide = (e: MediaQueryListEvent) => {
       if (e.matches) close(false);
     };
@@ -180,7 +181,7 @@ export function Nav() {
           </Link>
 
           {/* Desktop */}
-          <div className="hidden items-center md:flex">
+          <div className="hidden items-center lg:flex">
             <ul className="flex items-center">
               {LINKS.map((l, i) => {
                 const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
@@ -218,7 +219,7 @@ export function Nav() {
               })}
             </ul>
 
-            <span className="mono-label ml-5 hidden items-center gap-2 text-[var(--stage-subtle)] lg:inline-flex">
+            <span className="mono-label ml-5 hidden items-center gap-2 text-[var(--stage-subtle)] xl:inline-flex">
               <StatusDot tone="ok" blink />
               Applications open
             </span>
@@ -232,7 +233,7 @@ export function Nav() {
           <button
             ref={triggerRef}
             type="button"
-            className="-mr-2 flex h-11 w-11 items-center justify-center md:hidden"
+            className="-mr-2 flex h-11 w-11 items-center justify-center lg:hidden"
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-haspopup="dialog"
@@ -257,7 +258,7 @@ export function Nav() {
         aria-label="Site menu"
         aria-hidden={!open}
         inert={!open}
-        className={`fixed inset-0 z-[60] bg-ink transition-[opacity,visibility] duration-[var(--dur-base)] ease-[var(--ease-out-expo)] md:hidden ${
+        className={`fixed inset-0 z-[60] bg-ink transition-[opacity,visibility] duration-[var(--dur-base)] ease-[var(--ease-out-expo)] lg:hidden ${
           open ? "visible opacity-100" : "pointer-events-none invisible opacity-0"
         }`}
       >

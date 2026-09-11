@@ -21,6 +21,10 @@ export const club = {
   instagram: "", // Profile URL. Leave "" to hide the link.
   discord: "https://discord.gg/NcAk7Tfv5", // Invite URL. Leave "" to hide the link.
   github: "https://github.com/Null891/Ship-It-Society",
+  /** Meeting slides. Leave "" to hide every slides link on the site. */
+  slides: "",
+  /** The club's own description, used on About, in forms and in metadata. */
+  bio: "Ship It Society is a hackathon club at Fremont High School dedicated to helping students bring their ideas to life. Each hackathon follows the same principle: take a concept from initial idea to a fully deployed product.",
 };
 
 /* --- Hero ----------------------------------------------------------------- */
@@ -206,10 +210,18 @@ export const prizes = {
   headline: "Sponsor-funded. Paid in cash.",
   standfirst:
     "Our sponsors fund a cash prize pool for every hackathon. Judging weights a working deployment above everything else.",
+  currency: "USD",
   tiers: [
-    { place: "01", title: "First", note: "Best shipped product" },
-    { place: "02", title: "Second", note: "Runner-up" },
-    { place: "03", title: "Most secure", note: "Cleanest scan result" },
+    { place: "01", title: "First", amount: 100, note: "Best shipped product" },
+    { place: "02", title: "Second", amount: 50, note: "Runner-up" },
+    { place: "03", title: "Most secure", amount: 50, note: "Cleanest scan result" },
+  ],
+  /** Per hackathon. Every rule here follows from the format and judging above. */
+  rules: [
+    "Prizes are awarded every hackathon, funded by the club's sponsors and paid in cash.",
+    "Only projects that are live at the deadline are judged.",
+    "A project with open security findings cannot place.",
+    "Judges score against the weights below and use the product, not the slides.",
   ],
   criteria: [
     { term: "Shipped", weight: "40%", detail: "It is live and a stranger can use it." },
@@ -261,7 +273,7 @@ export function deadlineOf(entry: SeasonEntry): string {
 
 export const meeting = {
   cadence: "Every other week",
-  time: "During lunch",
+  time: "Lunch, 12:15 PM",
   /** Set once a room is assigned; "" hides the line rather than printing a placeholder. */
   room: "A-104",
   nextMeeting: "2026-09-23T12:15:00-07:00",
@@ -331,6 +343,39 @@ export const hackathonsPage = {
     "Every hackathon runs the same thirty days. Officers run each one end to end, and the deadline never moves.",
 };
 
+/* --- Teams ----------------------------------------------------------------
+   Confirmed by the club: build solo or in a team of two to four, and teams
+   lock at kickoff.
+   ------------------------------------------------------------------------- */
+
+export const teams = {
+  min: 1,
+  max: 4,
+  summary: "Build solo, or in a team of two to four. Teams lock at kickoff.",
+  rules: [
+    "Solo entries are welcome.",
+    "Teams are two to four people.",
+    "Everyone applies individually, then teams form at kickoff.",
+    "Teams lock on day 1. The team that starts is the team that ships.",
+  ],
+};
+
+/* --- About -----------------------------------------------------------------
+   The club in its own words, then the facts that back it up.
+   ------------------------------------------------------------------------- */
+
+export const about = {
+  eyebrow: "About",
+  title: ["Ideas in.", "Products out."],
+  standfirst: club.bio,
+  facts: [
+    { term: "Founded by", detail: `${officers.length} students, who run every hackathon themselves.` },
+    { term: "Format", detail: "One-month hackathons, idea to deployed product." },
+    { term: "Standard", detail: "Every project is security reviewed before it goes live." },
+    { term: "Meets", detail: meetingLine },
+  ],
+};
+
 /* --- Join ----------------------------------------------------------------- */
 
 export const join = {
@@ -345,6 +390,15 @@ export const join = {
     "Bring your own device. A laptop or Chromebook is enough.",
     "The club runs on Discord. The invite comes with your acceptance.",
     "Come to one meeting before you commit. See whether the format suits you.",
+  ],
+  /** What happens after you press send. Each step is a fact stated elsewhere
+   *  on the site; keep them in sync if the process changes. */
+  after: [
+    { step: "01", title: "Confirmation", detail: "You see a confirmation as soon as the application sends." },
+    { step: "02", title: "A reply", detail: "An officer reads it and replies by email within a week." },
+    { step: "03", title: "Discord", detail: "Join the club Discord. It is open to everyone, before or after applying." },
+    { step: "04", title: "Next meeting", detail: `Come to the next meeting. ${meetingLine}.` },
+    { step: "05", title: "Kickoff", detail: `Build solo or form a team of up to ${teams.max}. Teams lock on day 1.` },
   ],
   success: {
     title: "Application received.",
