@@ -19,7 +19,7 @@ export const club = {
   location: "Sunnyvale, California",
   email: "bob.murphy.97chute@gmail.com",
   instagram: "", // Profile URL. Leave "" to hide the link.
-  discord: "", // Invite URL. Leave "" to hide the link.
+  discord: "https://discord.gg/NcAk7Tfv5", // Invite URL. Leave "" to hide the link.
   github: "https://github.com/Null891/Ship-It-Society",
 };
 
@@ -260,10 +260,10 @@ function deadlineOf(entry: SeasonEntry): string {
 
 export const meeting = {
   cadence: "Every other week",
-  time: "1:30 - 2:10 PM",
+  time: "During lunch",
   /** Set once a room is assigned; "" hides the line rather than printing a placeholder. */
-  room: "",
-  nextMeeting: "2026-09-23T13:30:00-07:00",
+  room: "A-104",
+  nextMeeting: "2026-09-23T12:15:00-07:00",
 };
 
 /**
@@ -322,12 +322,85 @@ export const join = {
   points: [
     "Open to every grade.",
     "No application fee and no prerequisites.",
+    "Bring your own device. A laptop or Chromebook is enough.",
+    "The club runs on Discord. The invite comes with your acceptance.",
     "Come to one meeting before you commit. See whether the format suits you.",
   ],
   success: {
     title: "Application received.",
     body: "We read every one. Expect a reply within a week, and come to the next meeting either way.",
   },
+};
+
+/* --- What you will learn --------------------------------------------------
+   The club gives people the tools to build and ship. Each item names one
+   tool, and the last one is the point of the club: the work does not count
+   until it is live.
+   ------------------------------------------------------------------------- */
+
+export const learn = {
+  eyebrow: "What you will learn",
+  headline: ["Tools you keep.", "Work you can show."],
+  standfirst:
+    "The point of this club is not the club. It is what you can build with it afterward.",
+  items: [
+    {
+      term: "AI-assisted building",
+      detail:
+        "Using AI tooling the way working engineers do: to move through the solved parts, so your time goes to the parts that are not.",
+    },
+    {
+      term: "Real deployment",
+      detail:
+        "Repos, deploys, and a live URL. Your project exists outside your laptop, and anyone with the link can use it.",
+    },
+    {
+      term: "Security review",
+      detail:
+        "Finding the holes before a stranger does. The same checks a professional team clears before launch.",
+    },
+    {
+      term: "Shipping",
+      detail:
+        "Cutting scope to hit a date, and finishing. The skill is the launch, not the slides.",
+    },
+  ],
+};
+
+/* --- FAQ -------------------------------------------------------------------
+   Written from the questions the officers actually get. New questions go in
+   here rather than anywhere else on the site, so every answer has one home.
+   ------------------------------------------------------------------------- */
+
+export const faq = {
+  eyebrow: "FAQ",
+  headline: ["Asked often.", "Answered once."],
+  items: [
+    {
+      q: "Where and when do you meet?",
+      a: "Every other week during lunch in room A-104. Bring your food, not a permission slip.",
+    },
+    {
+      q: "Why does the application ask for my email?",
+      a: "So we can reply with your acceptance and the Discord invite. It is the one field we cannot do without.",
+    },
+    {
+      q: "Can I join with a friend?",
+      a: "Yes, and you can compete as a team. Apply separately so we can track both applications, then name your team at kickoff.",
+    },
+    {
+      q: "How much time does a hackathon take?",
+      a: "The meetings run one lunch period every other week. The build itself fits around your schedule; the deadline does not.",
+    },
+    {
+      q: "Do I need my own laptop?",
+      a: "Bring your own device if you have one. A laptop or Chromebook is enough, and the library lends them when you do not have one.",
+    },
+    {
+      q: "Where do we talk between meetings?",
+      a: "The club runs on Discord. It is where specs get reviewed, findings get cleared, and the demo link goes out. The invite is in the footer.",
+    },
+  ],
 };
 
 /* --- Footer --------------------------------------------------------------- */

@@ -130,9 +130,12 @@ export function ApplyForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="max-w-[46rem]">
-      {/* Honeypot. Hidden from people and from assistive tech; bots fill it. */}
+      {/* Honeypot. Hidden from people and from assistive tech; bots fill it.
+          The label is bait for autofill bots, and is never rendered to a
+          person — this block is display:none by way of being off-screen and
+          aria-hidden. */}
       <div aria-hidden className="absolute left-[-9999px] h-px w-px overflow-hidden">
-        <label htmlFor={`${uid}-company`}>Company</label>
+        <label htmlFor={`${uid}-company`}>Leave this field empty</label>
         <input
           id={`${uid}-company`}
           type="text"

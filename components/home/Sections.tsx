@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { premise, prizes, security, stats, join } from "@/content/club";
+import { club, faq, join, learn, premise, prizes, security, stats } from "@/content/club";
 import { sponsors } from "@/content/sponsors";
 import { Eyebrow } from "@/components/ui/Button";
 import { Annotation, Marquee, RegMark } from "@/components/ui/Poster";
@@ -254,6 +254,109 @@ export function SponsorRow() {
   );
 }
 
+/** What members come away with. The same term/detail table the judging
+ *  criteria use — the tools are stated as plainly as the rules. */
+export function Learn() {
+  return (
+    <section className="pt-28 md:pt-40" aria-labelledby="learn-title">
+      <div className="edge">
+        <div className="grid12">
+          <div className="col-span-4 md:col-span-5">
+            <Eyebrow index={6}>{learn.eyebrow}</Eyebrow>
+            <RevealLines
+              lines={learn.headline}
+              id="learn-title"
+              className="optical mt-5 text-3xl font-semibold"
+            />
+            <p className="pretty mt-6 max-w-[44ch] text-lg text-[var(--stage-muted)]">
+              {learn.standfirst}
+            </p>
+          </div>
+
+          <Stagger
+            as="dl"
+            className="col-span-4 mt-12 md:col-span-6 md:col-start-7 md:mt-0"
+          >
+            {learn.items.map((item, i) => (
+              <StaggerItem index={i} key={item.term} className="rule-t py-5">
+                <dt className="text-lg font-medium">{item.term}</dt>
+                <dd className="pretty mt-1.5 text-base text-[var(--stage-muted)]">
+                  {item.detail}
+                </dd>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** FAQ. A native details accordion — no script, so the answers stay
+ *  reachable with JavaScript off, and find-in-page sees all of them. The
+ *  marker is a plus that turns as a row opens; inline SVG per the
+ *  no-icon-set rule. */
+export function Faq() {
+  return (
+    <section className="pt-28 md:pt-40" aria-labelledby="faq-title">
+      <div className="edge">
+        <div className="grid12 items-start gap-y-10">
+          <div className="col-span-4 md:col-span-5">
+            <Eyebrow index={7}>{faq.eyebrow}</Eyebrow>
+            <RevealLines
+              lines={faq.headline}
+              id="faq-title"
+              className="optical mt-5 text-3xl font-semibold"
+            />
+            <p className="pretty mt-6 max-w-[40ch] text-base text-[var(--stage-muted)]">
+              If a question is not covered here, ask it in the Discord — the
+              invite is in the footer — or email the officers.
+            </p>
+          </div>
+
+          <div className="col-span-4 md:col-span-6 md:col-start-7">
+            {faq.items.map((item, i) => (
+              <details
+                key={item.q}
+                open={i === 0}
+                className="group border-b border-[var(--stage-line)] first:border-t"
+              >
+                <summary className="flex cursor-pointer list-none items-baseline justify-between gap-6 py-5 [&::-webkit-details-marker]:hidden">
+                  <span className="flex items-baseline gap-4">
+                    <span
+                      aria-hidden
+                      className="mono-label tnum text-[var(--stage-muted)]"
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-base font-medium md:text-lg">
+                      {item.q}
+                    </span>
+                  </span>
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 12 12"
+                    className="h-3 w-3 shrink-0 self-center transition-transform duration-[var(--dur-fast)] group-open:rotate-45"
+                  >
+                    <path
+                      d="M6 1v10M1 6h10"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                    />
+                  </svg>
+                </summary>
+                <p className="pretty pb-6 pl-9 pr-6 text-base text-[var(--stage-muted)]">
+                  {item.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /** Closing call to action. Offset, not centred. */
 export function JoinCta() {
   return (
@@ -281,12 +384,24 @@ export function JoinCta() {
                 </li>
               ))}
             </ul>
-            <Link
-              href="/join"
-              className="mt-10 inline-flex rounded-pill bg-marigold px-6 py-3 text-base font-medium text-ink transition-[background-color,transform] duration-[var(--dur-fast)] ease-[var(--ease-apple)] hover:bg-marigold-hi active:scale-[0.98]"
-            >
-              Apply to join
-            </Link>
+            <div className="mt-10 flex flex-wrap items-center gap-6">
+              <Link
+                href="/join"
+                className="inline-flex rounded-pill bg-marigold px-6 py-3 text-base font-medium text-ink transition-[background-color,transform] duration-[var(--dur-fast)] ease-[var(--ease-apple)] hover:bg-marigold-hi active:scale-[0.98]"
+              >
+                Apply to join
+              </Link>
+              {club.discord && (
+                <a
+                  href={club.discord}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-base underline decoration-[var(--stage-line)] underline-offset-4 transition-colors hover:decoration-current"
+                >
+                  Join the Discord
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>

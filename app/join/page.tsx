@@ -66,10 +66,20 @@ export default function JoinPage() {
                 </h2>
                 <a
                   href={`mailto:${club.email}`}
-                  className="mt-3 inline-block text-base underline decoration-[var(--stage-line)] underline-offset-4 transition-colors hover:decoration-current"
+                  className="mt-3 block text-base underline decoration-[var(--stage-line)] underline-offset-4 transition-colors hover:decoration-current"
                 >
                   {club.email}
                 </a>
+                {club.discord && (
+                  <a
+                    href={club.discord}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="mt-2 block text-base underline decoration-[var(--stage-line)] underline-offset-4 transition-colors hover:decoration-current"
+                  >
+                    Ask in the Discord
+                  </a>
+                )}
               </div>
             </aside>
           </div>

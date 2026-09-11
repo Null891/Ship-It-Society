@@ -5,7 +5,9 @@ import { Format } from "@/components/home/Format";
 import { CyclePlate } from "@/components/home/CyclePlate";
 import { IndexRail } from "@/components/ui/Poster";
 import {
+  Faq,
   JoinCta,
+  Learn,
   Premise,
   Prizes,
   Security,
@@ -50,8 +52,10 @@ export default function HomePage() {
       <CyclePlate />
       <Security />
       <Prizes />
+      <Learn />
       <SponsorRow />
       <Countdown />
+      <Faq />
       <JoinCta />
     </>
   );
