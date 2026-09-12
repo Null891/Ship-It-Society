@@ -7,6 +7,7 @@ import { projects, projectsPage } from "@/content/projects";
 import { CoverPlate } from "@/components/ui/Texture";
 import { Morph } from "@/components/ui/Morph";
 import { ArchivePlate } from "@/components/ui/Plates";
+import { CycleStatusPanel } from "@/components/projects/CycleStatusPanel";
 
 export const metadata: Metadata = routeMetadata.projects;
 
@@ -53,7 +54,7 @@ export default function ProjectsPage() {
                 </span>
               </div>
 
-              <div className="col-span-4 mt-6 md:col-span-7 md:col-start-4 md:mt-0">
+              <div className="col-span-4 mt-6 md:col-span-6 md:col-start-4 md:mt-0">
                 <h2 className="optical text-2xl font-semibold tracking-[-0.028em]">
                   {projectsPage.empty.headline}
                 </h2>
@@ -72,6 +73,12 @@ export default function ProjectsPage() {
                     →
                   </span>
                 </Link>
+              </div>
+
+              {/* What the archive is waiting on, as a live readout rather
+                  than a promise. Every value is derived from the season. */}
+              <div className="col-span-4 mt-10 md:col-span-3 md:col-start-10 md:mt-0">
+                <CycleStatusPanel />
               </div>
             </div>
           ) : (

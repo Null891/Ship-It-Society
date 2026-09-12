@@ -47,10 +47,13 @@ export function StatusDot({
   tone = "ok",
   blink = false,
   className = "",
+  ref,
 }: {
   tone?: "ok" | "accent" | "muted" | "alert";
   blink?: boolean;
   className?: string;
+  /** For callers that drive the light imperatively, e.g. the hero's phase. */
+  ref?: React.Ref<HTMLSpanElement>;
 }) {
   const bg =
     tone === "ok"
@@ -62,6 +65,7 @@ export function StatusDot({
           : "bg-[var(--stage-subtle)]";
   return (
     <span
+      ref={ref}
       aria-hidden
       className={`inline-block h-1.5 w-1.5 shrink-0 ${bg} ${blink ? "fui-blink" : ""} ${className}`}
     />

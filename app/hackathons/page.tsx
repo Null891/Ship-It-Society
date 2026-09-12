@@ -7,6 +7,7 @@ import { Format } from "@/components/home/Format";
 import { Eyebrow } from "@/components/ui/Button";
 import { OrbitPlate } from "@/components/ui/Plates";
 import { Calendar } from "@/components/hackathons/Calendar";
+import { SpecSheet } from "@/components/hackathons/SpecSheet";
 import { Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { hackathonsPage, meetingLine, prizes, security } from "@/content/club";
 
@@ -21,6 +22,8 @@ export default function HackathonsPage() {
         title={hackathonsPage.title}
         standfirst={hackathonsPage.standfirst}
       />
+
+      <SpecSheet index={1} />
 
       <Format />
 
