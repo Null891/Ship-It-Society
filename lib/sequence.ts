@@ -643,3 +643,34 @@ export function drawFrame(
 /** The frame shown when the visitor prefers reduced motion: scan complete,
  *  interface resolved, deploy underway. */
 export const STATIC_FRAME = 0.86;
+
+/* --- What the canvas is doing ---------------------------------------------
+   The hero's HUD overlay reports the sequence's state, so that state has to
+   come from the same phase table the drawing does. Reading it anywhere else
+   would let the readout and the picture disagree.
+   ------------------------------------------------------------------------- */
+
+export type SequencePhase = {
+  /** A terse HUD label. Not jargon: it names what is on screen. */
+  label: string;
+  /** Which status light belongs beside it. */
+  tone: "muted" | "accent" | "ok";
+};
+
+/** The boundary drawReadout uses to switch from SCAN CLEAN to LIVE. */
+const LIVE_AT =
+  PHASE.deploy[0] + (PHASE.deploy[1] - PHASE.deploy[0]) * 0.55;
+
+/**
+ * The phase the sequence is in at progress `p`. Pure, and keyed off the same
+ * PHASE windows drawFrame uses, so the label always matches the frame.
+ */
+export function phaseAt(p: number): SequencePhase {
+  const prog = clamp01(p);
+  if (prog < PHASE.codeIn[0]) return { label: "Standby", tone: "muted" };
+  if (prog < PHASE.morph[0]) return { label: "Writing", tone: "accent" };
+  if (prog < PHASE.scan[0]) return { label: "Assembling", tone: "accent" };
+  if (prog < PHASE.scan[1]) return { label: "Scanning", tone: "accent" };
+  if (prog < LIVE_AT) return { label: "Scan clean", tone: "ok" };
+  return { label: "Live", tone: "ok" };
+}

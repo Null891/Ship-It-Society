@@ -1,0 +1,79 @@
+/* ==========================================================================
+   The hero's entrance.
+
+   The headline is the LCP element, so its entrance may not wait on
+   JavaScript. Everything here is plain CSS keyframes that start the moment
+   the stylesheet applies: no IntersectionObserver, no hydration, no
+   html.anim gate. The failure modes all land on "content is visible" —
+
+     · animations unsupported     the elements render in their final state
+     · JavaScript off             identical, the entrance still plays
+     · reduced motion             no animation at all
+
+   The site-wide [data-reveal] system is deliberately NOT used on these
+   elements. It hides them until an observer fires after hydration, which
+   put the largest text on the page behind the JavaScript bundle.
+   ========================================================================== */
+
+@keyframes hero-line {
+  from {
+    transform: translateY(106%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* A masked display line. The mask is the wrapper's overflow. */
+.mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.line {
+  display: block;
+  animation: hero-line 760ms var(--ease-out-expo) both;
+  animation-delay: var(--in, 0ms);
+}
+
+/* Supporting copy and the actions. */
+.rise {
+  animation: hero-rise 620ms var(--ease-out-expo) both;
+  animation-delay: var(--in, 0ms);
+}
+
+/* The instrument layer arrives after the type, and only fades — it must
+   never move, or the frame would read as loose rather than locked on. */
+.fade {
+  animation: hero-fade var(--dur-xslow) var(--ease-apple) both;
+  animation-delay: var(--in, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .rise,
+  .fade {
+    animation: none;
+  }
+}
