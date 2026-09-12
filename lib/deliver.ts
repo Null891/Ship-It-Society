@@ -45,6 +45,9 @@ export type DeliveryOutcome =
   /** Development or preview with nothing configured: accepted, not stored. */
   | "unstored";
 
+/** "A question", "An update-list signup" — for the log lines below. */
+const aOrAn = (label: string) => `${/^[aeiou]/i.test(label) ? "An" : "A"} ${label}`;
+
 const flat = (v: Row["value"]) => (Array.isArray(v) ? v.join(", ") : (v ?? ""));
 
 /** Strip anything that could end a header line. Resend takes JSON, but a
@@ -142,14 +145,14 @@ export async function deliver(sub: Submission): Promise<DeliveryOutcome> {
   if (channels.length === 0) {
     if (isProduction()) {
       console.error(
-        `[forms] NO DELIVERY CONFIGURED IN PRODUCTION. A ${sub.label} was refused with 503 ` +
+        `[forms] NO DELIVERY CONFIGURED IN PRODUCTION. ${aOrAn(sub.label)} was refused with 503 ` +
           "because there is nowhere to send it. Set RESEND_API_KEY + APPLY_TO_EMAIL and/or " +
           "GOOGLE_SHEETS_WEBHOOK_URL + GOOGLE_SHEETS_SECRET. See SETUP.md.",
       );
       return "unavailable";
     }
     console.warn(
-      `[forms] No delivery configured. A ${sub.label} was accepted but NOT stored ` +
+      `[forms] No delivery configured. ${aOrAn(sub.label)} was accepted but NOT stored ` +
         "(development/preview only — production refuses it). See SETUP.md.",
     );
     return "unstored";
@@ -158,7 +161,7 @@ export async function deliver(sub: Submission): Promise<DeliveryOutcome> {
   const results = await Promise.allSettled(channels.map((c) => c.run()));
   results.forEach((r, i) => {
     if (r.status === "rejected") {
-      console.error(`[forms] ${channels[i].name} delivery failed for a ${sub.label}:`, r.reason);
+      console.error(`[forms] ${channels[i].name} delivery failed for ${aOrAn(sub.label).toLowerCase()}:`, r.reason);
     }
   });
 

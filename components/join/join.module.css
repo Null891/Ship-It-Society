@@ -1,0 +1,66 @@
+/* ==========================================================================
+   /join furniture: the boarding-pass ticket. (The burst mark draws with the
+   shared draw-path system in globals.css and needs nothing here.)
+   Colours, durations and easings are tokens only. The mask gradients below
+   use `black` and `transparent` as ALPHA, not as colours: a mask only reads
+   how opaque each pixel is.
+   ========================================================================== */
+
+/* --- The ticket ----------------------------------------------------------
+   A body and a stub, split by a perforation with a semicircle bitten out of
+   each edge. The bites are a mask, so they show whatever lies behind the
+   ticket rather than painting a black circle on it. Two gradient layers,
+   each covering just over half the height, so each carries one bite. */
+.ticket {
+  --notch: 10px;
+  --stub: 4.5rem;
+  --bite-x: calc(100% - var(--stub));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--stub);
+  background: var(--color-surface-800);
+  -webkit-mask:
+    radial-gradient(circle at var(--bite-x) 0, transparent var(--notch), black calc(var(--notch) + 0.5px)) top / 100% 51% no-repeat,
+    radial-gradient(circle at var(--bite-x) 100%, transparent var(--notch), black calc(var(--notch) + 0.5px)) bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle at var(--bite-x) 0, transparent var(--notch), black calc(var(--notch) + 0.5px)) top / 100% 51% no-repeat,
+    radial-gradient(circle at var(--bite-x) 100%, transparent var(--notch), black calc(var(--notch) + 0.5px)) bottom / 100% 51% no-repeat;
+}
+@media (width >= 640px) {
+  .ticket {
+    --notch: 13px;
+    --stub: 8.5rem;
+  }
+}
+
+/* The perforation: a dashed hairline down the seam, notch to notch. */
+.stub {
+  position: relative;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--stage-line-strong) 0 5px,
+    transparent 5px 10px
+  );
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+}
+
+/* Stub text reads bottom to top, the way a torn stub is printed. */
+.vertical {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* The ticket slides up once when it replaces the form. */
+.issue {
+  animation: issue var(--dur-xslow) var(--ease-out-expo) both;
+}
+@keyframes issue {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

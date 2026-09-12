@@ -29,8 +29,11 @@ export const APPLY_FIELDS = {
   grade: { label: "Grade" },
   experience: { label: "Coding experience" },
   why: { label: "Why do you want to join?", min: 20, max: 1200 },
-  idea: { label: "Something you would want to build", max: 600 },
+  idea: { label: "Something you would want to build", max: 600, optional: true },
 } as const;
+
+/** The one field the application does not require. /join counts it. */
+export const isOptional = (k: ApplyField) => "optional" in APPLY_FIELDS[k];
 
 export type ApplyField = keyof typeof APPLY_FIELDS;
 

@@ -19,22 +19,31 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
 
+/* Vercel's preview deployments inject the Toolbar (comments, share links)
+   from vercel.live. It is allowed there and nowhere else: production and
+   local development never load it. */
+const isPreview = process.env.VERCEL_ENV === "preview";
+const LIVE = isPreview ? " https://vercel.live" : "";
+
 const CSP = [
   "default-src 'self'",
   // 'unsafe-inline': see the note above. va.vercel-scripts.com is Analytics.
   // 'unsafe-eval' is added in DEVELOPMENT ONLY: React rebuilds server call
   // stacks with eval() in dev and Turbopack's HMR relies on it, so without
   // it every local page load logs CSP errors. Production never receives it.
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com${LIVE}`,
   // Tailwind emits inline styles, and Motion writes inline style attributes.
   "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
   "font-src 'self' https://cdn.fontshare.com data:",
   "img-src 'self' data: blob:",
-  "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+  // Analytics and Speed Insights both report to this origin's own /_vercel
+  // path, so only the Analytics script host is needed here.
+  `connect-src 'self' https://va.vercel-scripts.com${LIVE}`,
   "frame-ancestors 'none'",
-  "frame-src 'none'",
+  isPreview ? "frame-src https://vercel.live" : "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'self'",
+  // Every form posts to this site's own /api routes, with or without script.
   "form-action 'self'",
   // Production is https-only; upgrading would only break plain-http localhost.
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
@@ -46,10 +55,14 @@ const SECURITY_HEADERS = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // interest-cohort is gone: FLoC was withdrawn, and browsers now log the
+  // unknown feature as a console warning on every page.
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
   },
+  // A window this site opens, or that opens it, gets no handle on the other.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",

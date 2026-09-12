@@ -1,0 +1,73 @@
+/* ==========================================================================
+   FAQ rows: native <details>, drawn as HUD rows.
+
+   An open row sits on the one panel step with its bottom-right corner cut.
+   Where the browser supports animating to `auto` (interpolate-size and
+   ::details-content), the answer slides open; elsewhere it simply appears.
+   Reduced motion collapses every transition globally, so it snaps.
+   ========================================================================== */
+
+.row {
+  position: relative;
+  isolation: isolate;
+  border-bottom: 1px solid var(--stage-line);
+  interpolate-size: allow-keywords;
+}
+.row:first-child {
+  border-top: 1px solid var(--stage-line);
+}
+
+/* The open ground, a clipped layer so the hairlines above and below stay
+   straight. */
+.row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-surface-900);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%
+  );
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-apple);
+  pointer-events: none;
+}
+.row[open]::before {
+  opacity: 1;
+}
+
+.summary {
+  list-style: none;
+  cursor: pointer;
+}
+.summary::-webkit-details-marker {
+  display: none;
+}
+.summary:focus-visible {
+  outline-offset: -2px;
+}
+
+.row::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size var(--dur-slow) var(--ease-out-expo),
+    content-visibility var(--dur-slow) allow-discrete;
+}
+.row[open]::details-content {
+  block-size: auto;
+}
+
+/* Plus to minus: the upright bar turns flat as the row opens. */
+.bar {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--dur-base) var(--ease-out-expo);
+}
+.row[open] .bar {
+  transform: rotate(90deg);
+}

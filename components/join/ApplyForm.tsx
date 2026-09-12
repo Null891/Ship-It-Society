@@ -1,328 +1,196 @@
 "use client";
 
-import { useId, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { z } from "zod";
-import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useMemo, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import {
+  ChoiceField,
+  ErrorSummary,
+  FailurePanel,
+  Honeypot,
+  Spinner,
+  TextAreaField,
+  TextField,
+} from "@/components/forms/Fields";
+import { useSubmission, type Errors, type Values } from "@/components/forms/useSubmission";
+import {
+  APPLY_FIELDS,
+  APPLY_ORDER,
   EXPERIENCE,
   GRADES,
   applicationSchema,
-  type Application,
-  type FieldErrors,
+  isOptional,
+  toFieldErrors,
 } from "@/lib/apply";
-import { club, join } from "@/content/club";
-import { HONEYPOT } from "@/lib/forms/shared";
-import { DUR, EASE_OUT_EXPO } from "@/lib/motion";
+import { REASON_COPY, outcomeAnchor, type Outcome } from "@/lib/forms/shared";
+import { BoardingPass } from "./BoardingPass";
 
 /* ==========================================================================
-   The application form.
+   The membership application.
 
-   Validation runs against the same zod schema the route handler uses.
-   Errors are inline and specific — never a toast, which vanishes before a
-   student has read it and is unreachable to a screen reader afterwards.
+   Validation runs against the same schema the route handler uses
+   (lib/apply.ts). Errors are inline and specific — never a toast, which
+   vanishes before a student has read it and is unreachable to a screen
+   reader afterwards. The submit loop, the fields and the panels are the
+   same ones every other form on the site uses (components/forms).
+
+   A real <form method="post" action="/api/apply">: without JavaScript the
+   browser posts it, the route redirects back to /join, and the page renders
+   the outcome — the pass, or what went wrong — on the server.
    ========================================================================== */
 
-const inputBase =
-  // No outline-none here. It is a utility, so it outranks the global
-  // :focus-visible rule in the base layer and silently removes the keyboard
-  // focus ring from every text field. The border darkening is a supplement to
-  // the ring, never a replacement for it.
-  "w-full rounded-inset border bg-paper px-4 py-3 text-base transition-[border-color] duration-[var(--dur-fast)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-surface-900)]";
+const BASE = "apply";
+const LABELS: Record<string, string> = Object.fromEntries(
+  APPLY_ORDER.map((k) => [k, APPLY_FIELDS[k].label]),
+);
+const NO_JS_FIELD = "Check this answer, then send it again.";
 
-function fieldClasses(hasError: boolean) {
-  return `${inputBase} ${
-    hasError
-      ? "border-[var(--color-alert)]"
-      : "border-[var(--color-line-light)]"
-  }`;
-}
+/** The first word of the name as typed, for the pass. Held in this tab only. */
+const firstName = (v: Values["name"]) =>
+  (Array.isArray(v) ? v[0] : (v ?? "")).trim().split(/\s+/)[0]?.slice(0, 24) ?? "";
 
-function ErrorText({ id, children }: { id: string; children?: string }) {
-  return (
-    <AnimatePresence initial={false}>
-      {children && (
-        <motion.p
-          id={id}
-          role="alert"
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: DUR.fast, ease: EASE_OUT_EXPO }}
-          className="overflow-hidden text-sm text-alert"
-        >
-          <span className="block pt-2">{children}</span>
-        </motion.p>
-      )}
-    </AnimatePresence>
-  );
-}
+export function ApplyForm({ outcome }: { outcome?: Outcome }) {
+  const [name, setName] = useState("");
 
-export function ApplyForm() {
-  const uid = useId();
-  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
-  const [serverMessage, setServerMessage] = useState("");
+  const validate = useCallback((values: Values): Errors => {
+    const parsed = applicationSchema.safeParse(values);
+    return parsed.success ? {} : (toFieldErrors(parsed.error) as Errors);
+  }, []);
 
-  /* The schema preprocesses raw input, so the form's values are the schema's
-     INPUT type and the submit handler receives its OUTPUT type. */
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<z.input<typeof applicationSchema>, unknown, Application>({
-    resolver: zodResolver(applicationSchema),
-    mode: "onBlur",
+  const initialErrors = useMemo(() => {
+    if (outcome?.status !== "error" || outcome.reason !== "invalid") return undefined;
+    return Object.fromEntries((outcome.fields ?? []).map((f) => [f, NO_JS_FIELD]));
+  }, [outcome]);
+
+  const onSent = useCallback((values: Values) => setName(firstName(values.name)), []);
+
+  const { formRef, status, errors, failure, attempt, onSubmit, onBlur, onChange } = useSubmission({
+    endpoint: "/api/apply",
+    order: APPLY_ORDER,
+    validate,
+    initialErrors,
+    onSent,
   });
 
-  async function onSubmit(values: Application, event?: React.BaseSyntheticEvent) {
-    // Read the trap straight off the submitted form, so nothing about it lives
-    // in React state or a ref.
-    const form = event?.target instanceof HTMLFormElement ? event.target : null;
-    const trap = form?.elements.namedItem(HONEYPOT);
-    const trapValue = trap instanceof HTMLInputElement ? trap.value : "";
-    setStatus("sending");
-    setServerMessage("");
-    try {
-      const res = await fetch("/api/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // The trap travels with the submission; the server quietly accepts,
-        // without delivering, anything that filled it.
-        body: JSON.stringify({ ...values, [HONEYPOT]: trapValue }),
-      });
-      const data: { ok: boolean; message?: string; fields?: FieldErrors } =
-        await res.json();
+  if (status === "done") return <BoardingPass name={name || undefined} focus />;
+  if (outcome?.status === "received") return <BoardingPass id={outcomeAnchor("apply", outcome)} />;
 
-      if (!res.ok || !data.ok) {
-        // Re-project server-side field errors back onto the form so the
-        // student is taken to the field that needs attention.
-        if (data.fields) {
-          for (const [key, message] of Object.entries(data.fields)) {
-            if (message) setError(key as Parameters<typeof setError>[0], { message });
-          }
-        }
-        setServerMessage(data.message ?? "Something went wrong. Try again.");
-        setStatus("error");
-        return;
-      }
-      setStatus("done");
-    } catch {
-      setServerMessage(
-        "We could not reach the server. Check your connection and try again.",
-      );
-      setStatus("error");
-    }
-  }
-
-  if (status === "done") {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: DUR.xslow, ease: EASE_OUT_EXPO }}
-        className="rounded-card border border-[var(--color-line-light)] bg-paper p-8 md:p-10"
-        role="status"
-      >
-        <span
-          aria-hidden
-          className="mb-6 inline-block h-2.5 w-2.5 bg-marigold"
-        />
-        <h2 className="text-2xl font-semibold tracking-[-0.028em]">
-          {join.success.title}
-        </h2>
-        <p className="pretty mt-3 max-w-[44ch] text-base text-[var(--stage-muted)]">
-          {join.success.body}
-        </p>
-      </motion.div>
-    );
-  }
+  const sending = status === "sending";
+  const serverError = outcome?.status === "error" && attempt === 0 ? outcome : undefined;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="max-w-[46rem]">
-      {/* The trap field. It used to be called "company", which read as a real
-          question to anyone who met it and invited autofill. It now has a
-          meaningless name, sits off-screen, is out of the tab order, and is
-          hidden from assistive tech along with its label. People never see
-          it; scripts that fill every input do. */}
-      <div aria-hidden className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
-        <label htmlFor={`${uid}-trap`}>Leave blank</label>
-        <input
-          id={`${uid}-trap`}
-          name={HONEYPOT}
-          type="text"
-          tabIndex={-1}
-          autoComplete="off"
-          defaultValue=""
+    <form
+      ref={formRef}
+      action="/api/apply"
+      method="post"
+      onSubmit={onSubmit}
+      onBlur={onBlur}
+      onChange={onChange}
+      aria-busy={sending || undefined}
+      className="relative"
+    >
+      {serverError && (
+        <FailurePanel
+          id={outcomeAnchor("apply", serverError)}
+          failure={REASON_COPY[serverError.reason]}
+          email={serverError.reason !== "invalid"}
+          live={false}
         />
-      </div>
+      )}
+      {failure && <FailurePanel key={`f${attempt}`} failure={failure} />}
+      {attempt > 0 && (
+        <ErrorSummary key={`e${attempt}`} base={BASE} errors={errors} order={APPLY_ORDER} labels={LABELS} />
+      )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <label htmlFor={`${uid}-name`} className="mono-label block pb-2.5">
-            Name
-          </label>
-          <input
-            id={`${uid}-name`}
-            type="text"
-            autoComplete="name"
-            placeholder="Your full name"
-            aria-invalid={!!errors.name}
-            aria-describedby={errors.name ? `${uid}-name-err` : undefined}
-            className={fieldClasses(!!errors.name)}
-            {...register("name")}
+      <Honeypot base={BASE} />
+
+      <div className="grid grid-cols-1 gap-x-8 gap-y-9 sm:grid-cols-2">
+        <TextField
+          base={BASE}
+          name="name"
+          label={APPLY_FIELDS.name.label}
+          required
+          min={2}
+          max={APPLY_FIELDS.name.max}
+          autoComplete="name"
+          error={errors.name}
+        />
+        <TextField
+          base={BASE}
+          name="email"
+          type="email"
+          label={APPLY_FIELDS.email.label}
+          required
+          max={APPLY_FIELDS.email.max}
+          autoComplete="email"
+          error={errors.email}
+        />
+
+        <div className="sm:col-span-2">
+          <ChoiceField
+            base={BASE}
+            name="grade"
+            label={APPLY_FIELDS.grade.label}
+            options={GRADES.map((g) => ({ value: g, label: g }))}
+            required
+            layout="row"
+            error={errors.grade}
           />
-          <ErrorText id={`${uid}-name-err`}>{errors.name?.message}</ErrorText>
         </div>
 
-        <div>
-          <label htmlFor={`${uid}-email`} className="mono-label block pb-2.5">
-            Email
-          </label>
-          <input
-            id={`${uid}-email`}
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            aria-invalid={!!errors.email}
-            aria-describedby={errors.email ? `${uid}-email-err` : undefined}
-            className={fieldClasses(!!errors.email)}
-            {...register("email")}
+        <div className="sm:col-span-2">
+          <ChoiceField
+            base={BASE}
+            name="experience"
+            label={APPLY_FIELDS.experience.label}
+            options={EXPERIENCE}
+            required
+            layout="stack"
+            error={errors.experience}
           />
-          <ErrorText id={`${uid}-email-err`}>{errors.email?.message}</ErrorText>
+        </div>
+
+        <div className="sm:col-span-2">
+          <TextAreaField
+            base={BASE}
+            name="why"
+            label={APPLY_FIELDS.why.label}
+            required
+            min={APPLY_FIELDS.why.min}
+            max={APPLY_FIELDS.why.max}
+            rows={4}
+            help="A sentence or two is plenty."
+            error={errors.why}
+          />
+        </div>
+
+        <div className="sm:col-span-2">
+          <TextAreaField
+            base={BASE}
+            name="idea"
+            label={APPLY_FIELDS.idea.label}
+            required={!isOptional("idea")}
+            max={APPLY_FIELDS.idea.max}
+            rows={3}
+            help="Anything. It does not have to be good yet."
+            error={errors.idea}
+          />
         </div>
       </div>
 
-      {/* aria-describedby goes on the fieldset so the error is announced with
-          the group, and aria-invalid on each input so the state is exposed
-          per control. Only name/email/why were wired before this. */}
-      <fieldset
-        className="mt-8"
-        role="radiogroup"
-        aria-invalid={!!errors.grade}
-        aria-describedby={errors.grade ? `${uid}-grade-err` : undefined}
-      >
-        <legend className="mono-label pb-3">Grade</legend>
-        <div className="flex flex-wrap gap-2">
-          {GRADES.map((g) => (
-            <label
-              key={g}
-              className="cursor-pointer rounded-pill border border-[var(--color-line-light)] px-5 py-2.5 text-base transition-[border-color,background-color] duration-[var(--dur-fast)] has-[:checked]:border-transparent has-[:checked]:bg-ink has-[:checked]:text-paper has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marigold"
-            >
-              <input
-                type="radio"
-                value={g}
-                className="sr-only"
-                {...register("grade")}
-              />
-              {g}
-            </label>
-          ))}
-        </div>
-        <ErrorText id={`${uid}-grade-err`}>{errors.grade?.message}</ErrorText>
-      </fieldset>
-
-      <fieldset
-        className="mt-8"
-        role="radiogroup"
-        aria-invalid={!!errors.experience}
-        aria-describedby={errors.experience ? `${uid}-exp-err` : undefined}
-      >
-        <legend className="mono-label pb-3">Coding experience</legend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {EXPERIENCE.map((e) => (
-            <label
-              key={e.value}
-              className="cursor-pointer rounded-inset border border-[var(--color-line-light)] p-4 transition-[border-color] duration-[var(--dur-fast)] has-[:checked]:border-[var(--color-surface-900)] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marigold"
-            >
-              <input
-                type="radio"
-                value={e.value}
-                className="sr-only"
-                {...register("experience")}
-              />
-              <span className="block text-base font-medium">{e.label}</span>
-              <span className="mt-1 block text-sm text-[var(--stage-muted)]">
-                {e.hint}
-              </span>
-            </label>
-          ))}
-        </div>
-        <ErrorText id={`${uid}-exp-err`}>{errors.experience?.message}</ErrorText>
-      </fieldset>
-
-      <div className="mt-8">
-        <label htmlFor={`${uid}-why`} className="mono-label block pb-2.5">
-          Why do you want to join?
-        </label>
-        <textarea
-          id={`${uid}-why`}
-          rows={4}
-          placeholder="A sentence or two is plenty."
-          aria-invalid={!!errors.why}
-          aria-describedby={errors.why ? `${uid}-why-err` : undefined}
-          className={`${fieldClasses(!!errors.why)} resize-y`}
-          {...register("why")}
-        />
-        <ErrorText id={`${uid}-why-err`}>{errors.why?.message}</ErrorText>
-      </div>
-
-      <div className="mt-8">
-        <label htmlFor={`${uid}-idea`} className="mono-label block pb-2.5">
-          Something you would want to build
-          <span className="ml-2 normal-case tracking-normal opacity-50">
-            Optional
-          </span>
-        </label>
-        <textarea
-          id={`${uid}-idea`}
-          rows={3}
-          placeholder="Anything. It does not have to be good yet."
-          className={`${fieldClasses(!!errors.idea)} resize-y`}
-          {...register("idea")}
-        />
-        <ErrorText id={`${uid}-idea-err`}>{errors.idea?.message}</ErrorText>
-      </div>
-
-      <div className="mt-10 flex flex-wrap items-center gap-5">
-        <button
-          type="submit"
-          disabled={status === "sending"}
-          className="inline-flex items-center gap-2.5 rounded-pill bg-marigold px-6 py-3 text-base font-medium text-ink transition-[background-color,transform,opacity] duration-[var(--dur-fast)] ease-[var(--ease-apple)] hover:bg-marigold-hi active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55"
-        >
-          {status === "sending" && (
-            <motion.span
-              aria-hidden
-              className="block h-3 w-3 rounded-full border-[1.5px] border-ink border-t-transparent"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
-            />
+      <div className="mt-11 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <Button type="submit" size="lg" arrow={!sending} aria-disabled={sending || undefined}>
+          {sending ? (
+            <span className="inline-flex items-center gap-2.5">
+              <Spinner />
+              Sending
+            </span>
+          ) : (
+            "Send application"
           )}
-          {status === "sending" ? "Sending" : "Send application"}
-        </button>
-
-        <AnimatePresence>
-          {status === "error" && serverMessage && (
-            <motion.p
-              role="alert"
-              initial={{ opacity: 0, x: -6 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: DUR.base, ease: EASE_OUT_EXPO }}
-              className="text-sm text-alert"
-            >
-              {serverMessage}{" "}
-              <a
-                href={`mailto:${club.email}`}
-                className="underline underline-offset-4"
-              >
-                Email us instead
-              </a>
-              .
-            </motion.p>
-          )}
-        </AnimatePresence>
+        </Button>
+        <p role="status" className="sr-only">
+          {sending ? "Sending your application." : ""}
+        </p>
       </div>
     </form>
   );
