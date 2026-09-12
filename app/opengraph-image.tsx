@@ -57,6 +57,8 @@ function lastDay(week: (typeof format.weeks)[number]): number {
 
 const WEEK_ENDS = format.weeks.map(lastDay);
 const DAYS = WEEK_ENDS[WEEK_ENDS.length - 1];
+/** The headline's last line, without its full stop: "Idea to shipped". */
+const PROMISE = hero.headline[hero.headline.length - 1].replace(/\.$/, "");
 
 function Bracket({ x, y, flipX, flipY }: { x: number; y: number; flipX?: boolean; flipY?: boolean }) {
   const arm = 30;
@@ -150,12 +152,13 @@ export default async function OpengraphImage() {
             </span>
           </div>
 
-          {/* The headline, large and light. */}
-          <div style={{ display: "flex", flexDirection: "column", marginTop: 74 }}>
+          {/* The headline, large and light. The bottom margin keeps the
+              descenders of the last line clear of the scale below. */}
+          <div style={{ display: "flex", flexDirection: "column", marginTop: 74, marginBottom: 30 }}>
             {hero.headline.map((line) => (
               <span
                 key={line}
-                style={{ fontSize: 112, lineHeight: 1.0, letterSpacing: "-0.045em", marginLeft: -6 }}
+                style={{ fontSize: 104, lineHeight: 1.0, letterSpacing: "-0.045em", marginLeft: -6 }}
               >
                 {line}
               </span>
@@ -223,7 +226,7 @@ export default async function OpengraphImage() {
             }}
           >
             <span style={{ color: MUTED }}>{`Meets ${meetingLine}`}</span>
-            <span style={{ color: FG }}>{`${DAYS} days · idea to shipped`}</span>
+            <span style={{ color: FG }}>{`${DAYS} days · ${PROMISE}`}</span>
           </div>
         </div>
       </div>

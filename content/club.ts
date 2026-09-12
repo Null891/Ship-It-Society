@@ -17,11 +17,22 @@
    Voice: short declaratives. No exclamation marks. No hype words.
    ========================================================================== */
 
+/**
+ * The last day the facts on the site changed, YYYY-MM-DD. The sitemap
+ * publishes it as every page's last-modified date, so move it forward when
+ * you edit this file, sponsors.ts or projects.ts.
+ */
+export const siteUpdated = "2026-09-11";
+
+/** Where the school is. Structured data reads the parts; copy reads `club.location`. */
+const address = { locality: "Sunnyvale", region: "California", country: "US" };
+
 export const club = {
   name: "Ship It Society",
   shortName: "Ship It",
   school: "Fremont High School",
-  location: "Sunnyvale, California",
+  address,
+  location: `${address.locality}, ${address.region}`,
   email: "bob.murphy.97chute@gmail.com",
   instagram: "", // Profile URL. Leave "" to hide the link.
   discord: "https://discord.gg/NcAk7Tfv5", // Invite URL. Leave "" to hide the link.
@@ -239,12 +250,11 @@ export const prizes = {
 
 /* --- Schedule and countdown -----------------------------------------------
    The season is the single source of truth for hackathon dates. The
-   countdown deadline and the calendar windows are both DERIVED from it
-   below, so the homepage and /hackathons can no longer disagree — which
-   they previously did (homepage said Oct 7, the calendar said Oct 23).
+   countdown, the calendar, the archive status and the structured data all
+   derive from it, so no two pages can disagree about a date.
 
-   ISO 8601 with an explicit offset. Pacific is -07:00 during daylight
-   saving and -08:00 from early November to early March.
+   Each window opens at 00:00 on `start` and closes at 23:59 on `end`,
+   Pacific time. lib/schedule.ts resolves both through the time zone.
    ------------------------------------------------------------------------- */
 
 export type SeasonEntry = {
@@ -253,6 +263,7 @@ export type SeasonEntry = {
   start: string;
   /** Local date, YYYY-MM-DD. The deadline is 23:59 on this day. */
   end: string;
+  /** The UTC offset on the `end` date: -07:00 in daylight saving, -08:00 otherwise. */
   utcOffset: string;
 };
 
@@ -296,8 +307,7 @@ export const meeting = {
  * The one meeting string every surface prints. Empty parts drop out, so with
  * no room set it reads "Every other week · Lunch, 12:15 PM" and never ends
  * in a dangling separator. The footer, /join, /hackathons, the countdown and
- * the FAQ all derive from this or from `meeting`, so they cannot drift apart
- * the way they previously did.
+ * the FAQ all derive from this or from `meeting`, so they cannot drift apart.
  */
 export const meetingLine = [meeting.cadence, meeting.time, meeting.room]
   .filter(Boolean)
@@ -307,12 +317,13 @@ export const schedule = {
   ...meeting,
   nextHackathonName: season[0].name,
   nextHackathonDeadline: deadlineOf(season[0]),
-  /** Display rows for /hackathons, derived so they cannot drift from the deadline. */
-  season: season.map((entry, i) => ({
+  /** Display rows, derived so they cannot drift from the deadline. Whether a
+   *  cycle is planned, running or complete depends on the date, so it is
+   *  worked out at render time by lib/schedule.ts, never stored here. */
+  season: season.map((entry) => ({
     name: entry.name,
     window: `${short(entry.start)} - ${short(entry.end)}`,
     deadline: deadlineOf(entry),
-    status: i === 0 ? ("upcoming" as const) : ("planned" as const),
   })),
 };
 
@@ -360,6 +371,8 @@ export const hackathonsPage = {
     title: "Hackathons",
     description: `The format, the season calendar and the prizes. ${season.length} hackathons, ${short(season[0].start)} to ${short(season[season.length - 1].end)}, each one idea to deployed product with a security review before launch.`,
   },
+  /** One hackathon in a sentence. Structured data prints it for each season entry. */
+  eventDescription: `A one-month hackathon at ${club.school}: idea to deployed product, with a security review before launch.`,
 };
 
 /* --- Teams ----------------------------------------------------------------
@@ -367,13 +380,21 @@ export const hackathonsPage = {
    lock at kickoff.
    ------------------------------------------------------------------------- */
 
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight"];
+/** Small counts read as words in prose: 4 -> "four". */
+const inWords = (n: number) => NUMBER_WORDS[n] ?? String(n);
+
+const TEAM_MAX = 4;
+/** "two to four": a team is at least two people; one is a solo entry. */
+const teamRange = `two to ${inWords(TEAM_MAX)}`;
+
 export const teams = {
   min: 1,
-  max: 4,
-  summary: "Build solo, or in a team of two to four. Teams lock at kickoff.",
+  max: TEAM_MAX,
+  summary: `Build solo, or in a team of ${teamRange}. Teams lock at kickoff.`,
   rules: [
     "Solo entries are welcome.",
-    "Teams are two to four people.",
+    `Teams are ${teamRange} people.`,
     "Everyone applies individually, then teams form at kickoff.",
     "Teams lock on day 1. The team that starts is the team that ships.",
   ],
@@ -491,9 +512,6 @@ export type FaqItem = {
   link?: { label: string; href: string };
 };
 
-const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight"];
-const inWords = (n: number) => NUMBER_WORDS[n] ?? String(n);
-
 /** "$100". Prizes are whole amounts, paid in cash. */
 const money = (amount: number) =>
   prizes.currency === "USD" ? `$${amount}` : `${amount} ${prizes.currency}`;
@@ -513,7 +531,7 @@ const faqItems: (FaqItem | null)[] = [
   },
   {
     q: "Can I join with a friend?",
-    a: `Yes. Apply separately, then form your team at kickoff: solo, or two to ${inWords(teams.max)} people. Teams lock on day 1, so the team that starts is the team that ships.`,
+    a: `Yes. Apply separately, then form your team at kickoff: solo, or ${teamRange} people. Teams lock on day 1, so the team that starts is the team that ships.`,
   },
   {
     q: "What can I win?",
@@ -551,6 +569,28 @@ export const faq = {
   eyebrow: "FAQ",
   headline: ["Asked often.", "Answered once."],
   items: faqItems.filter((item): item is FaqItem => item !== null),
+};
+
+/* --- Not found -------------------------------------------------------------
+   The 404 page. `title` is set in the dot-matrix alphabet (lib/ascii), which
+   has A-Z, 0-9 and . - / : only. The actions are the four places a lost
+   visitor most likely meant to go.
+   ------------------------------------------------------------------------- */
+
+export const notFoundPage = {
+  title: ["Signal", "lost"],
+  meta: {
+    title: "Page not found",
+    description: `There is no page at this address on the ${club.name} site.`,
+  },
+  subtitle: "Error 404 · No page at this address",
+  body: "The link is broken, or the page moved. Everything the club publishes is one step from here.",
+  actions: [
+    { label: "Back to home", href: "/" },
+    hero.secondaryCta,
+    { label: "Read the handbook", href: "/handbook" },
+    hero.primaryCta,
+  ],
 };
 
 /* --- Footer --------------------------------------------------------------- */

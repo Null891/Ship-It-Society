@@ -514,6 +514,39 @@ export function illumination(phase: number): number {
   return (1 - Math.cos(phase * 2 * Math.PI)) / 2;
 }
 
+export type PhaseName =
+  | "New"
+  | "Waxing crescent"
+  | "First quarter"
+  | "Waxing gibbous"
+  | "Full"
+  | "Waning gibbous"
+  | "Last quarter"
+  | "Waning crescent";
+
+/** A real synodic month is 29.53 days; one day of it, as a phase fraction. */
+const LUNAR_DAY = 1 / 29.53;
+
+/**
+ * The conventional name for a phase. New, first quarter, full and last
+ * quarter are instants, so they name only the day or two that land within
+ * half a `step` of the point; every other day is a crescent or a gibbous.
+ * Pass `1 / (total - 1)` as the step for a cycle drawn day by day, so each
+ * point names the nearest day rather than a four-day band.
+ */
+export function phaseName(phase: number, step = LUNAR_DAY): PhaseName {
+  const p = clamp01(phase);
+  const near = (point: number) => Math.abs(p - point) <= step / 2 + 1e-9;
+  if (near(0) || near(1)) return "New";
+  if (near(0.25)) return "First quarter";
+  if (near(0.5)) return "Full";
+  if (near(0.75)) return "Last quarter";
+  if (p < 0.25) return "Waxing crescent";
+  if (p < 0.5) return "Waxing gibbous";
+  if (p < 0.75) return "Waning gibbous";
+  return "Waning crescent";
+}
+
 /* --- Display -------------------------------------------------------------
    Built from numeric parts and fixed English names rather than
    toLocaleString, whose spacing and punctuation differ between Node's ICU
@@ -575,6 +608,18 @@ export function weekdayDate(date: string): string {
 /** A window as "Sep 23 – Oct 23". */
 export function windowLabel(entry: SeasonEntry): string {
   return `${shortDate(entry.start)} – ${shortDate(entry.end)}`;
+}
+
+/** An instant as "Wed, Oct 7", in the club's zone. */
+export function eventDate(at: Date, timeZone = ZONE): string {
+  const w = wallClock(at, timeZone);
+  return `${w.weekdayShort}, ${w.monthShort} ${w.day}`;
+}
+
+/** An instant as "Wednesday, October 7 at 12:15 PM", for sentences. */
+export function eventSentence(at: Date, timeZone = ZONE): string {
+  const w = wallClock(at, timeZone);
+  return `${w.weekday}, ${w.month} ${w.day} at ${w.time}`;
 }
 
 /** Two digits for a readout: 7 -> "07". Larger numbers are left whole. */

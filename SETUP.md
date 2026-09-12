@@ -1,217 +1,360 @@
 # Setup
 
-Written for the officers who inherit this site, not for a developer. If you can
-follow a recipe you can run this.
+A guide for the student officers who run this site. You do not need to be a web
+developer: every task below is an edit to one file or a setting in an online
+dashboard, done in order.
+
+1. [Run the site on your computer](#1-run-the-site-on-your-computer)
+2. [Change the content](#2-change-the-content)
+3. [Keep the Discord invite working](#3-keep-the-discord-invite-working)
+4. [Deliver the forms](#4-deliver-the-forms)
+5. [Deploy on Vercel](#5-deploy-on-vercel)
+6. [Move to the custom domain](#6-move-to-the-custom-domain)
+7. [Hand over to next year's officers](#7-hand-over-to-next-years-officers)
 
 ---
 
-## 1. Run it on your computer
+## 1. Run the site on your computer
 
-You need [Node.js](https://nodejs.org) 20.9 or newer. Check with `node -v`.
+Install [Node.js](https://nodejs.org) 20.9 or newer, then in the project folder:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open <http://localhost:3000>. Edits appear immediately.
+Open <http://localhost:3000>. Saved edits appear in the browser straight away.
+
+Before you push a change, run the same check the build runs:
+
+```bash
+npm run check:placeholders
+```
+
+It fails on unfinished text, and prints the file and line of each problem. A
+failure here would also fail the deploy.
 
 ---
 
 ## 2. Change the content
 
-**Almost everything you will ever want to change is in one file:
-`content/club.ts`.** Names, dates, meeting times, prize amounts, the copy on
-every page.
+Everything the site says lives in `content/`. You should never need to edit
+`app/` or `components/` to keep the site current. Each fact is written once and
+the rest of the site reads it, so change it in one place and every page that
+mentions it follows.
 
-Search that file for `TODO` to find every unfinished item. Each one has a
-comment saying what belongs there.
+### The meeting
 
-The other two content files:
+In `content/club.ts`, `meeting`:
 
-| File | Holds |
+| Field | Meaning |
 | --- | --- |
-| `content/club.ts` | Copy, dates, officers, prizes, schedule |
-| `content/projects.ts` | Shipped projects and their case studies |
-| `content/sponsors.ts` | Sponsors and the become-a-sponsor pitch |
+| `cadence` | How often, in words, as printed on the site |
+| `time` | When, in words |
+| `room` | The room. Set it to `""` to hide the room everywhere |
+| `nextMeeting` | Any one real meeting, as a date and time with its offset, e.g. `"2026-09-23T12:15:00-07:00"` |
 
-You should not need to touch anything in `app/` or `components/` to keep the
-site current.
+The site finds the next meeting by stepping forward two weeks at a time from
+`nextMeeting`, at the same local time. You only change it when the day, the time
+or the two-week rhythm changes.
 
-### Dates
+### The season
 
-Dates are ISO 8601 with an explicit timezone offset:
+In `content/club.ts`, `season` lists each hackathon:
 
 ```ts
-nextHackathonDeadline: "2026-10-07T23:59:00-07:00",
+{ name: "Hackathon 01", start: "2026-09-23", end: "2026-10-23", utcOffset: "-07:00" },
 ```
 
-`-07:00` is Pacific Daylight Time. From early November to early March, use
-`-08:00`. A date in the past is skipped automatically — the countdown falls
-back to the next meeting, and hides itself entirely if both have passed. A
-stale date degrades quietly rather than showing a negative countdown.
+- `start` and `end` are calendar dates. A hackathon opens at midnight on
+  `start` and closes at 11:59 PM on `end`, Pacific time.
+- `utcOffset` is the offset on the `end` date: `-07:00` from mid-March to early
+  November, `-08:00` from early November to mid-March.
 
-### Prize amounts
+The countdown, the calendar, the projects archive status and the search engine
+event listings all read this list. When a season ends, add the next one's dates
+here.
 
-An amount of `0` renders as **TBA**, not `$0`. It is safe to launch before the
-figures are settled.
+### Prizes and teams
 
-### Photos
+- `prizes.tiers` in `content/club.ts` holds each prize's name and amount in
+  whole dollars. To drop a prize, delete its tier; do not set an amount to 0.
+- `prizes.rules` is the list of prize rules shown on the site and in the FAQ.
+- `teams.max` is the largest team allowed. The FAQ and the join page wording
+  follow it.
 
-Officer portraits go in `public/team/`, then set `image: "/team/name.jpg"` in
-`content/club.ts`. With no image the card renders a monogram tile, which is a
-designed state — it does not look broken, so there is no rush.
+### Officers
 
-Sponsor logos go in `public/brand/`. With no logo the sponsor name is set in
-type, which is also deliberate.
+`officers` in `content/club.ts` has each officer's `name`, `role` and `image`.
+To add a photo, put the file in `public/team/` (create the folder the first
+time), then set `image` to its path, e.g. `"/team/derrick.jpg"`. With no
+image, the card shows the officer's initials instead.
 
-### The sample projects
+### Links that stay hidden until set
 
-`content/projects.ts` ships with two entries flagged `sample: true`. They exist
-so the archive is never empty before your first hackathon, and they render with
-a **Sample** label so nobody mistakes them for real work. Delete them once you
-have real projects.
+In `club` at the top of `content/club.ts`:
+
+- `slides`: the meeting slides link. While it is `""`, no slides link appears.
+- `instagram`: the club's Instagram profile. While it is `""`, no Instagram link
+  appears.
+- `discord` and `github` work the same way.
+
+### Sponsors, projects and the update date
+
+- `content/sponsors.ts`: each sponsor's name, what they do, what they give, and
+  their link.
+- `content/projects.ts`: shipped projects. The archive page and the sitemap
+  pick up the first entry automatically. Every field in an entry needs a real
+  value.
+- `siteUpdated` near the top of `content/club.ts`: the date the site's facts
+  last changed. Move it forward when you edit content; search engines read it
+  from the sitemap.
 
 ---
 
-## 3. Make the application form work
+## 3. Keep the Discord invite working
 
-The form at `/join` sends to two places independently. Set up either one, or
-both. If one is misconfigured the other still receives the application.
+The invite currently in `club.discord` **expires on October 3, 2026**, and it
+opens into an officers' channel. Replace it before then with a permanent invite
+to the welcome channel:
 
-Create a file called `.env.local` in the project root. Copy `.env.example` as a
-starting point. **Never commit `.env.local`** — it is already gitignored.
+1. In Discord, right-click the server's welcome channel and choose
+   **Invite People**.
+2. Choose **Edit invite link**. Set **Expire After** to **Never** and
+   **Max Number of Uses** to **No limit**, then generate the link.
+3. Copy the link into `club.discord` in `content/club.ts`, and deploy.
 
-### Option A — Email (Resend)
+The site tells visitors the Discord is open to anyone, before or after they
+apply, so the invite must not require an approval step.
 
-1. Make a free account at <https://resend.com>. The free tier is 3,000 emails
-   a month, far more than a club needs.
-2. Go to **API Keys**, create one, copy it.
-3. Put this in `.env.local`:
+---
 
+## 4. Deliver the forms
+
+The site has five built-in forms:
+
+| Form | Where | Sent as |
+| --- | --- | --- |
+| Membership application | `/join` | `apply` |
+| Register interest | `/get-involved` | `interest` |
+| Offer a talk | `/get-involved` | `speaker` |
+| Ask a question | `/get-involved` | `question` |
+| Donate a prize or gift | `/get-involved` | `gift` |
+
+Every submission is delivered to **email** (through Resend), to a **Google
+Sheet**, or to both. Set up at least one. If one of them fails, the other still
+receives the submission. On the live site, if neither is set up, the forms
+refuse submissions and ask visitors to email the officers instead, so nothing is
+silently lost.
+
+### Environment variables
+
+These are secret settings the server reads. Locally they go in a file named
+`.env.local` in the project folder (copy `.env.example`; it is never committed).
+On the live site they go in Vercel (section 5).
+
+| Variable | What to set |
+| --- | --- |
+| `RESEND_API_KEY` | Your Resend API key |
+| `APPLY_TO_EMAIL` | The inbox that receives submissions. Several addresses can be separated with commas |
+| `APPLY_FROM_EMAIL` | Optional. The sender. Leave it empty to use Resend's shared sender |
+| `GOOGLE_SHEETS_WEBHOOK_URL` | The Apps Script web app URL, ending in `/exec` |
+| `GOOGLE_SHEETS_SECRET` | A long random password that only the site and the script know |
+| `NEXT_PUBLIC_SITE_URL` | The site's public address, with `https://` and no trailing slash |
+
+### Email with Resend
+
+Resend's shared sender works without owning a domain, but it only delivers to
+the email address that owns the Resend account. So:
+
+1. Sign up at [resend.com](https://resend.com) **using the club's own email
+   address**, the one in `club.email`.
+2. Open **API Keys**, create a key with sending access, and copy it into
+   `RESEND_API_KEY`.
+3. Set `APPLY_TO_EMAIL` to that same club address. Leave `APPLY_FROM_EMAIL`
+   empty.
+
+Each email's reply-to is the person who filled in the form's address, so pressing
+reply answers them directly.
+
+To deliver to several officers' own inboxes, or to send from an address on the
+club's domain, first verify a domain in Resend (**Domains**, then follow the DNS
+steps), then set `APPLY_FROM_EMAIL` to an address on it, such as
+`Ship It Society <forms@your-domain>`, and add the other inboxes to
+`APPLY_TO_EMAIL`.
+
+### A Google Sheet
+
+The site sends each submission to the sheet as JSON:
+
+```json
+{ "secret": "...", "form": "speaker", "submittedAt": "2026-09-23T19:15:00.000Z", "fields": { "name": "...", "email": "..." } }
 ```
-RESEND_API_KEY=re_xxxxxxxxxxxx
-APPLY_TO_EMAIL=you@example.com
-```
 
-`APPLY_TO_EMAIL` accepts several addresses separated by commas, so every
-officer can get a copy.
+The script below checks the secret, writes the submission to a tab named after
+the form (creating the tab and its header row the first time), and answers `ok`.
+With a wrong or missing secret it answers `forbidden` and writes nothing. The
+site only counts a submission as stored when the answer is exactly `ok`.
 
-By default mail is sent from Resend's shared address, which needs no domain
-setup. Once you own a domain and verify it with Resend, add:
+**1. Create the sheet.** Make a new Google Sheet with the club's Google
+account, and name it something like *Ship It Society forms*.
 
-```
-APPLY_FROM_EMAIL=Ship It Society <apply@yourdomain.com>
-```
-
-### Option B — Google Sheet
-
-Better for reviewing applications together as a board.
-
-1. Make a new Google Sheet.
-2. **Extensions → Apps Script**. Delete what is there and paste:
+**2. Add the script.** Open **Extensions → Apps Script**, delete the starter
+code, and paste:
 
 ```js
+/**
+ * Ship It Society: form submissions from the website.
+ *
+ * The site POSTs { secret, form, submittedAt, fields }. Each form gets its
+ * own tab, named after the form. Row 1 of a tab is its header: submittedAt,
+ * then each field name in the order it first arrived. A field the form adds
+ * later gets a new column on the right, so old rows keep their columns.
+ */
 function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-
-  // Optional shared secret. If you set one here, set the same value as
-  // GOOGLE_SHEETS_SECRET in .env.local.
-  var SECRET = "";
-  if (SECRET && data.secret !== SECRET) {
-    return ContentService.createTextOutput("forbidden");
+  var payload;
+  try {
+    payload = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return answer("forbidden");
   }
 
-  var sheet = SpreadsheetApp.getActiveSheet();
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow([
-      "Received", "Name", "Email", "Grade", "Experience", "Why", "Idea", "Status",
-    ]);
+  var expected = PropertiesService.getScriptProperties().getProperty("FORMS_SECRET");
+  if (!expected || !payload || payload.secret !== expected) {
+    return answer("forbidden");
   }
-  sheet.appendRow([
-    data.receivedAt, data.name, data.email, data.grade,
-    data.experience, data.why, data.idea, "new",
-  ]);
-  return ContentService.createTextOutput("ok");
+
+  var tabName = String(payload.form || "").replace(/[^a-z0-9_-]/gi, "").slice(0, 40);
+  var fields = payload.fields || {};
+  if (!tabName) {
+    return answer("forbidden");
+  }
+
+  // One writer at a time, so two submissions at once cannot share a row.
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var book = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = book.getSheetByName(tabName) || book.insertSheet(tabName);
+
+    var header = ["submittedAt"];
+    if (sheet.getLastRow() > 0) {
+      header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    }
+    var added = Object.keys(fields).filter(function (key) {
+      return header.indexOf(key) === -1;
+    });
+    if (sheet.getLastRow() === 0 || added.length > 0) {
+      header = header.concat(added);
+      sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+      sheet.setFrozenRows(1);
+    }
+
+    var row = header.map(function (key) {
+      if (key === "submittedAt") return asText(payload.submittedAt);
+      return Object.prototype.hasOwnProperty.call(fields, key) ? asText(fields[key]) : "";
+    });
+    sheet.appendRow(row);
+  } finally {
+    lock.releaseLock();
+  }
+
+  return answer("ok");
+}
+
+/** Text that starts like a formula is stored as plain text, never run. */
+function asText(value) {
+  var text = value === null || value === undefined ? "" : String(value);
+  return /^[=+\-@]/.test(text) ? "'" + text : text;
+}
+
+function answer(text) {
+  return ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.TEXT);
 }
 ```
 
-3. **Deploy → New deployment → Web app**.
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-4. Copy the web app URL and put it in `.env.local`:
+**3. Store the secret.** Make a long random password (a password manager can
+generate one). In Apps Script, open **Project Settings** (the gear), scroll to
+**Script Properties**, choose **Add script property**, and add a property
+named `FORMS_SECRET` whose value is that password. Keeping it here rather than
+in the code means the code can be shared without sharing the secret.
 
-```
-GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/xxxx/exec
-GOOGLE_SHEETS_SECRET=
-```
+**4. Deploy it.**
 
-### Test it
+1. Choose **Deploy → New deployment**.
+2. Next to **Select type**, click the gear and choose **Web app**.
+3. Set **Execute as** to **Me**, and **Who has access** to **Anyone**. The
+   site's server has no Google account, so the web app must accept anonymous
+   requests; the secret is what keeps everyone else out.
+4. Click **Deploy**, and approve the permissions Google asks for.
+5. Copy the **Web app URL**. It ends in `/exec`.
 
-With the dev server running:
+**5. Connect the site.** Set `GOOGLE_SHEETS_WEBHOOK_URL` to the web app URL and
+`GOOGLE_SHEETS_SECRET` to the same password you stored in step 3.
 
-```bash
-curl -X POST http://localhost:3000/api/apply \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Test Student","email":"test@example.com","grade":"11","experience":"some","why":"I want to build something and actually ship it."}'
-```
+**Changing the script later.** Paste the new code, then choose **Deploy →
+Manage deployments**, click the pencil on the existing deployment, set
+**Version** to **New version**, and click **Deploy**. This keeps the same URL.
+Choosing *New deployment* instead creates a new URL, which the site would not
+know about.
 
-A successful response tells you what happened to each sink:
+### Check that it works
 
-```json
-{ "ok": true, "delivery": { "email": "sent", "sheet": "skipped" } }
-```
+After setting the variables (and redeploying, on the live site), open
+`/get-involved`, send the question form with your own email address, and
+confirm the email arrived and a `question` tab appeared in the sheet.
 
-`skipped` means that sink is not configured. `failed` means it is configured but
-did not work — check the terminal for the reason.
-
-> If you configure **neither**, the form still appears to work but applications
-> are **not stored anywhere**. The server logs a loud warning when this happens.
-
----
-
-## 4. Put it on the internet
-
-1. Push the project to GitHub.
-2. Go to <https://vercel.com>, sign in with GitHub, **Add New → Project**, pick
-   the repository. Vercel detects Next.js on its own.
-3. Under **Environment Variables**, add the same values from `.env.local`, plus:
-
-```
-NEXT_PUBLIC_SITE_URL=https://your-real-domain.com
-```
-
-That one matters — it is used for the sitemap, the social share card, and the
-structured data. Without it those point at a placeholder.
-
-4. Deploy. Every later `git push` redeploys automatically.
-
-### A custom domain
-
-In Vercel: **Settings → Domains**. A `.dev` or `.org` domain is usually
-$10–15/year. Update `NEXT_PUBLIC_SITE_URL` to match and redeploy.
+If nothing arrives, open the Vercel project's **Logs** and search for
+`[forms]`. Every delivery failure is logged there with its reason, such as a
+rejected Resend key or a sheet that answered `forbidden` because the two secrets
+do not match.
 
 ---
 
-## 5. Handing over to next year's officers
+## 5. Deploy on Vercel
 
-1. Add them to the GitHub repository.
-2. Add them to the Vercel project.
-3. Move `APPLY_TO_EMAIL` to their address.
-4. Point them at this file and at `content/club.ts`.
+1. Sign in to [vercel.com](https://vercel.com) with GitHub, choose
+   **Add New → Project**, and import this repository. Vercel detects Next.js by
+   itself.
+2. In the project's **Settings → Environment Variables**, add the variables from
+   section 4 for the **Production** environment. Add them to **Preview** too if
+   you want forms on preview deployments to deliver.
+3. Deploy. From then on, every push to the production branch updates the live
+   site.
 
-The design rules the site is built to are written down in `CLAUDE.md`. If you
-use an AI assistant to make changes, it will read that file and stay consistent
-with what is already here. Those rules exist for a reason — the site is built to
-not look generated, and most of that is in the constraints.
+Environment variables apply to new deployments only. After changing one, go to
+**Deployments**, open the latest production deployment's menu, and choose
+**Redeploy**.
+
+The site regenerates its pages every six hours, so the next meeting and the
+current hackathon stay correct without a redeploy. Content edits still need a
+push.
 
 ---
 
-## Commands
+## 6. Move to the custom domain
 
-| Command | Does |
-| --- | --- |
-| `npm run dev` | Local dev server with hot reload |
-| `npm run build` | Production build. Run before pushing if unsure. |
-| `npm start` | Serve the production build locally |
-| `npm run lint` | Check code quality |
+The club has applied for an `is-a.dev` subdomain. Once it is approved:
+
+1. In Vercel, open **Settings → Domains**, add the domain, and create the DNS
+   record Vercel shows, following the registry's instructions.
+2. Set `NEXT_PUBLIC_SITE_URL` to the new address, with `https://` and no
+   trailing slash, for the Production environment.
+3. Redeploy.
+
+That one variable moves every absolute URL the site publishes: canonical links,
+the sitemap, `robots.txt`, the structured data for search engines, and the
+social card. Nothing else in the code names the address.
+
+The registry turned the first application down as an incomplete website, which
+is why the placeholder check exists. Keep it passing.
+
+---
+
+## 7. Hand over to next year's officers
+
+1. Add them to the GitHub repository and the Vercel project.
+2. Share the club email, Resend, Google Sheet and Discord server with them.
+3. Update `officers` in `content/club.ts`.
+4. Point them at this file, and at [CLAUDE.md](./CLAUDE.md) for the design
+   rules the site is built to.

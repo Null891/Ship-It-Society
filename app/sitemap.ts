@@ -1,39 +1,61 @@
 import type { MetadataRoute } from "next";
+import { siteUpdated } from "@/content/club";
 import { projects } from "@/content/projects";
+import { absoluteUrl } from "@/lib/site";
 
-const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://ship-it-society.vercel.app";
+/* ==========================================================================
+   /sitemap.xml
 
-/* `lastmod` has to be a real freshness signal. Previously this called
-   new Date() per request, which told crawlers the whole site changed on
-   every fetch — worthless as a signal. force-static prerenders the sitemap
-   once, so BUILD_DATE is frozen at build time, and case studies carry their
-   own publish date from content/projects.ts. */
-export const dynamic = "force-static";
+   `lastModified` is a date typed in content (`siteUpdated`, and each
+   project's `published`), never the time of the build or the request. A
+   date that moves on every deploy tells a crawler that everything changed
+   when nothing did, and crawlers learn to ignore it.
 
-const BUILD_DATE = new Date();
+   Listed: every public page. Left out:
+     /projects and its case studies, while the archive is empty. An empty
+       archive is a designed status panel for visitors, not a page worth
+       indexing. They join the sitemap with the first project.
+     /team, which redirects to /about. A sitemap lists final URLs only.
+     /api/*, which robots.txt disallows.
+   ========================================================================== */
+
+const PAGES: { path: string; priority: number }[] = [
+  { path: "/", priority: 1 },
+  { path: "/hackathons", priority: 0.8 },
+  { path: "/join", priority: 0.8 },
+  { path: "/handbook", priority: 0.7 },
+  { path: "/about", priority: 0.7 },
+  { path: "/sponsors", priority: 0.6 },
+  { path: "/get-involved", priority: 0.6 },
+];
+
+/** Home prints without a trailing slash, matching its canonical link. */
+const url = (path: string) => (path === "/" ? absoluteUrl("/").replace(/\/$/, "") : absoluteUrl(path));
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = [
-    "",
-    "/hackathons",
-    "/projects",
-    "/team",
-    "/sponsors",
-    "/join",
-  ].map((path) => ({
-    url: `${SITE}${path}`,
-    lastModified: BUILD_DATE,
-    changeFrequency: "monthly" as const,
-    priority: path === "" ? 1 : path === "/join" ? 0.9 : 0.7,
+  const pages: MetadataRoute.Sitemap = PAGES.map(({ path, priority }) => ({
+    url: url(path),
+    lastModified: siteUpdated,
+    changeFrequency: "monthly",
+    priority,
   }));
 
-  const caseStudies = projects.map((p) => ({
-    url: `${SITE}/projects/${p.slug}`,
-    lastModified: new Date(p.published),
-    changeFrequency: "yearly" as const,
-    priority: 0.6,
-  }));
+  if (projects.length === 0) return pages;
 
-  return [...routes, ...caseStudies];
+  const newest = projects.map((p) => p.published).sort().at(-1) ?? siteUpdated;
+  return [
+    ...pages,
+    {
+      url: url("/projects"),
+      lastModified: newest > siteUpdated ? newest : siteUpdated,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    ...projects.map((p) => ({
+      url: url(`/projects/${p.slug}`),
+      lastModified: p.published,
+      changeFrequency: "yearly" as const,
+      priority: 0.6,
+    })),
+  ];
 }

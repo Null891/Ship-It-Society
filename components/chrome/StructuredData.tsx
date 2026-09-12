@@ -1,72 +1,123 @@
-import { club, hero, schedule } from "@/content/club";
+import { club, faq, hackathonsPage, meeting, season } from "@/content/club";
+import { OG_IMAGE } from "@/lib/metadata";
+import { deadlineAt, kickoffAt, zonedParts, zoneOffsetMinutes } from "@/lib/schedule";
+import { SITE_URL, absoluteUrl } from "@/lib/site";
 
 /* ==========================================================================
-   JSON-LD.
+   JSON-LD — schema.org facts about the club, read from content/club.ts.
 
-   Describes the club as an organisation and the next hackathon as an event,
-   so search engines can show the meeting details directly rather than
-   guessing them out of the prose. Rendered on the server; it never reaches
-   the client bundle.
+   StructuredData (every page, from the root layout)
+     EducationalOrganization  the club, with its school as parentOrganization
+     WebSite                  the site, published by the club
+     Event                    one per `season` entry
+
+   FaqStructuredData (the page that shows the FAQ)
+     FAQPage                  every question and answer in `faq.items`
+
+   The FAQ is separate because FAQPage markup belongs only on a page where
+   the questions are visible; declaring it site-wide would describe pages
+   that do not show it.
+
+   Nothing here reads the clock, so the markup is identical at build time and
+   on every revalidation. Every season entry is listed, with its real window:
+   the window opens at 00:00 and closes at 23:59 local time, as defined in
+   lib/schedule.ts, and each offset is looked up through the time zone rather
+   than copied, so a window that crosses the November DST change carries
+   -07:00 at the start and -08:00 at the end.
    ========================================================================== */
 
-const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://shipitsociety.vercel.app";
+const ORG_ID = `${SITE_URL}/#org`;
+const SITE_ID = `${SITE_URL}/#site`;
 
-/* Built once at module load rather than per render. Reading the clock during
-   render makes a component impure; and because these pages are statically
-   generated, "now" is build time either way. Rebuild to refresh the event. */
-const GRAPH = buildGraph();
+const pad = (n: number) => String(n).padStart(2, "0");
 
-function buildGraph() {
-  const graph: Record<string, unknown>[] = [
-    {
-      "@type": "Organization",
-      "@id": `${SITE}/#org`,
-      name: club.name,
-      description: hero.standfirst,
-      url: SITE,
-      memberOf: { "@type": "CollegeOrUniversity", name: club.school },
-      areaServed: club.location,
-    },
-    {
-      "@type": "WebSite",
-      "@id": `${SITE}/#site`,
-      url: SITE,
-      name: club.name,
-      publisher: { "@id": `${SITE}/#org` },
-      inLanguage: "en-US",
-    },
-  ];
-
-  // Only advertise the hackathon while it is still ahead of us.
-  if (new Date(schedule.nextHackathonDeadline).getTime() > Date.now()) {
-    graph.push({
-      "@type": "Event",
-      name: `${club.name} — ${schedule.nextHackathonName}`,
-      description:
-        "A one-month hackathon: idea to deployed, security tested before launch.",
-      startDate: schedule.nextMeeting,
-      endDate: schedule.nextHackathonDeadline,
-      eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-      eventStatus: "https://schema.org/EventScheduled",
-      location: { "@type": "Place", name: club.school, address: club.location },
-      organizer: { "@id": `${SITE}/#org` },
-      isAccessibleForFree: true,
-    });
-  }
-  return graph;
+/** An instant as local ISO 8601 with its offset: "2026-10-28T00:00:00-07:00". */
+function localIso(at: Date): string {
+  const p = zonedParts(at);
+  const offset = zoneOffsetMinutes(at);
+  const sign = offset < 0 ? "-" : "+";
+  const abs = Math.abs(offset);
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}T${pad(p.hour)}:${pad(p.minute)}:${pad(p.second)}${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
 }
 
-const JSON_LD = JSON.stringify({
-  "@context": "https://schema.org",
-  "@graph": GRAPH,
-});
+const postalAddress = {
+  "@type": "PostalAddress",
+  addressLocality: club.address.locality,
+  addressRegion: club.address.region,
+  addressCountry: club.address.country,
+};
+
+const sameAs = [club.discord, club.github, club.instagram].filter(Boolean);
+
+const organization = {
+  "@type": "EducationalOrganization",
+  "@id": ORG_ID,
+  name: club.name,
+  alternateName: club.shortName,
+  url: absoluteUrl("/"),
+  email: club.email,
+  description: club.bio,
+  logo: absoluteUrl("/icon.svg"),
+  ...(sameAs.length ? { sameAs } : {}),
+  parentOrganization: {
+    "@type": "HighSchool",
+    name: club.school,
+    address: postalAddress,
+  },
+};
+
+const website = {
+  "@type": "WebSite",
+  "@id": SITE_ID,
+  url: absoluteUrl("/"),
+  name: club.name,
+  description: club.bio,
+  inLanguage: "en-US",
+  publisher: { "@id": ORG_ID },
+};
+
+const place = {
+  "@type": "Place",
+  name: meeting.room ? `Room ${meeting.room}, ${club.school}` : club.school,
+  address: postalAddress,
+};
+
+const events = season.map((entry) => ({
+  "@type": "Event",
+  name: `${club.name} ${entry.name}`,
+  description: hackathonsPage.eventDescription,
+  url: absoluteUrl("/hackathons"),
+  image: absoluteUrl(OG_IMAGE.url),
+  startDate: localIso(kickoffAt(entry)),
+  endDate: localIso(deadlineAt(entry)),
+  eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+  eventStatus: "https://schema.org/EventScheduled",
+  location: place,
+  organizer: { "@id": ORG_ID },
+  isAccessibleForFree: true,
+}));
+
+const faqPage = {
+  "@type": "FAQPage",
+  "@id": `${SITE_URL}/#faq`,
+  mainEntity: faq.items.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
+
+/** Serialise for a script tag. "<" is escaped so no string can close it. */
+const serialise = (graph: Record<string, unknown>[]) =>
+  JSON.stringify({ "@context": "https://schema.org", "@graph": graph }).replace(/</g, "\\u003c");
+
+const SITE_JSON = serialise([organization, website, ...events]);
+const FAQ_JSON = serialise([faqPage]);
 
 export function StructuredData() {
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON_LD }}
-    />
-  );
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: SITE_JSON }} />;
+}
+
+export function FaqStructuredData() {
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: FAQ_JSON }} />;
 }
