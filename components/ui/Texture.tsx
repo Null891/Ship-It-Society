@@ -8,6 +8,16 @@
    request, no layout cost.
 
    Kept at 3.5% opacity. If you can consciously see it, it is too strong.
+
+   No blend mode on dark grounds. `mix-blend-mode: screen` was the obvious
+   choice and it is the wrong one: over a near-black ground the two resolve to
+   the same pixels (screen against #000 returns the source, so both reduce to
+   `bg + opacity * noise`), but a blend mode forces the compositor to re-blend
+   everything beneath it whenever any of it repaints. Over the hero canvas that
+   halved the scrub: 33.3ms per frame at 4x CPU throttle with it, 16.7ms
+   without, and the canvas itself was never the cost — shrinking it to a
+   quarter of its size changed nothing. Light grounds keep `multiply`, where
+   the blend does change the result and nothing underneath is repainting.
    ========================================================================== */
 
 const NOISE = `<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>
@@ -20,11 +30,11 @@ const NOISE = `<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>
 
 export function Grain({
   opacity = 0.035,
-  blend = "screen",
+  blend = "none",
 }: {
   opacity?: number;
-  /** "screen" for dark grounds, "multiply" for light ones. */
-  blend?: "screen" | "multiply";
+  /** "multiply" for light grounds. Dark grounds need no blend — see above. */
+  blend?: "multiply" | "none";
 }) {
   return (
     <div
@@ -34,9 +44,7 @@ export function Grain({
         opacity,
         backgroundImage: `url("data:image/svg+xml,${NOISE}")`,
         backgroundRepeat: "repeat",
-        // Screen keeps the grain additive on black rather than muddying it;
-        // multiply is its mirror on light grounds.
-        mixBlendMode: blend,
+        ...(blend === "multiply" ? { mixBlendMode: "multiply" as const } : null),
       }}
     />
   );

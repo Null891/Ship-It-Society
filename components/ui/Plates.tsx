@@ -210,7 +210,7 @@ export function PlateFrame({
           <div className="pointer-events-none absolute inset-0 z-[1]">
             <Grain
               opacity={ground === "ink" ? 0.06 : 0.1}
-              blend={ground === "ink" ? "screen" : "multiply"}
+              blend={ground === "ink" ? "none" : "multiply"}
             />
           </div>
 
