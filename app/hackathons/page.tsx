@@ -16,6 +16,7 @@ export default function HackathonsPage() {
   return (
     <>
       <PageHeader
+        index={1}
         eyebrow={hackathonsPage.eyebrow}
         title={hackathonsPage.title}
         standfirst={hackathonsPage.standfirst}

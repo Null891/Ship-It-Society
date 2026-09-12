@@ -145,7 +145,11 @@ export function Nav() {
     <>
       <a
         href="#main"
-        className="chamfer sr-only z-[70] bg-marigold px-4 py-2 text-sm font-medium text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        /* The chamfer is applied only on focus. `sr-only` hides this by
+           clipping it with clip-path, and a chamfer's own clip-path replaced
+           that clip — which left an orange sliver parked in the top-left
+           corner of every page. */
+        className="sr-only z-[70] bg-marigold px-4 py-2 text-sm font-medium text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:chamfer"
       >
         Skip to content
       </a>
