@@ -121,6 +121,23 @@ exists and reduced motion is off, with a 3s dead-man's switch.
   stay under 1Hz.
 - CLS stays 0. Never animate layout properties; transform/opacity only.
 - Hero LCP text must not wait on JavaScript.
+- **No blend mode over anything that repaints.** `mix-blend-mode` forces the
+  compositor to re-blend everything beneath it on every repaint. Over the hero
+  canvas it cost exactly half the frame budget. On a dark ground `screen` is a
+  no-op anyway — see `components/ui/Texture.tsx`.
+
+### Measured baseline — do not regress
+
+Production, desktop, measured 2026-09-11. Re-measure before claiming a win.
+
+| | |
+|---|---|
+| LCP | **440ms**, on a hero line element (was 1148ms when it waited on JS) |
+| CLS | **0** |
+| Hero scrub, 4x CPU throttle | **60fps median** (16.7ms), p95 33.4ms |
+
+The scrub still shows 0–2 frames over 50ms per run as later sections enter.
+That is section entry, not the scrub itself; it was not chased further.
 
 ### Hydration safety
 
