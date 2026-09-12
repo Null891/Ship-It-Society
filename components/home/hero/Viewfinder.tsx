@@ -241,10 +241,15 @@ export function Viewfinder({
           </Box>
         </div>
 
+        {/* Everything that belongs at the foot of the frame. One auto margin,
+            not two: flexbox splits free space between every auto margin in a
+            line, so a second one would strand this group in the middle. */}
+        <div className="mt-auto">
         {/* --- the spec rail ----------------------------------------------
-            A strip below the corners on a phone; a right-hand rail on a
-            desktop, where the composition has margin to spare. */}
-        <div className="mt-2.5 flex flex-wrap items-stretch gap-2 md:absolute md:right-10 md:top-1/2 md:mt-0 md:w-[190px] md:-translate-y-1/2 md:flex-col md:gap-2.5 xl:right-14">
+            A strip above the status bar on a phone, where the foot of the
+            stage is the only margin there is; a right-hand rail on a
+            desktop, where the composition has a proper margin to spare. */}
+        <div className="mb-3 flex flex-wrap items-stretch gap-2 md:absolute md:right-10 md:top-1/2 md:mb-0 md:w-[190px] md:-translate-y-1/2 md:flex-col md:gap-2.5 xl:right-14">
           <Box label="Target" className="flex-1 md:flex-none">
             {schedule.nextHackathonName}
           </Box>
@@ -252,7 +257,7 @@ export function Viewfinder({
             {CYCLE_DAYS}-day cycle
           </Box>
           {/* One cell per week of the published format. */}
-          <Box label="Cycle" className="hidden md:block">
+          <Box label="Cycle" className="w-full md:w-auto">
             <span className="flex items-center gap-2">
               <span ref={cellsRef} className="flex shrink-0 items-center gap-[3px]">
                 {CYCLE_WEEKS.map((w) => (
@@ -271,7 +276,7 @@ export function Viewfinder({
         </div>
 
         {/* --- the status bar --------------------------------------------- */}
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[var(--stage-line)] pt-2.5 md:gap-x-5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[var(--stage-line)] pt-2.5 md:gap-x-5">
           <span className="mono-label order-1 shrink-0 text-[var(--stage-muted)]">
             <ZoneClock />
           </span>
@@ -298,6 +303,7 @@ export function Viewfinder({
               <span className="text-[var(--stage-subtle)]"> / {CYCLE_DAYS}</span>
             </span>
           </span>
+          </div>
         </div>
       </div>
     </div>

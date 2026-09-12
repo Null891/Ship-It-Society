@@ -240,11 +240,14 @@ export function HeroSequence() {
             the live readouts. Every field on it is real — see Viewfinder. */}
         <Viewfinder ref={viewfinderRef} cue={reduced ? null : hero.scrollCue} />
 
+        {/* The padding is clearance for the viewfinder: the HUD owns the top
+            corners and the status bar owns the foot, so the type centres in
+            what is left rather than in the whole stage. */}
         <div
           ref={titleRef}
-          className="edge relative z-20 flex h-full flex-col justify-center"
+          className="edge relative z-20 flex h-full flex-col justify-center pb-[132px] pt-[168px] md:pb-[104px] md:pt-[186px]"
         >
-          <div className="md:max-w-[74%] xl:max-w-[64%]">
+          <div className="md:max-w-[68%] lg:max-w-[74%] xl:max-w-[80%]">
             <p
               className={`mono-label mb-6 flex items-center gap-3 text-[var(--stage-muted)] ${styles.rise}`}
               style={{ ["--in" as string]: "60ms" }}

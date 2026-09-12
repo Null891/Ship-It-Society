@@ -10,11 +10,11 @@ export function Learn() {
       <div className="edge">
         <div className="grid12">
           <div className="col-span-4 md:col-span-5">
-            <Eyebrow index={6}>{learn.eyebrow}</Eyebrow>
+            <Eyebrow index={5}>{learn.eyebrow}</Eyebrow>
             <RevealLines
               lines={learn.headline}
               id="learn-title"
-              className="optical mt-5 text-3xl font-semibold"
+              className="optical mt-5 text-3xl font-light"
             />
             <p className="pretty mt-6 max-w-[44ch] text-lg text-[var(--stage-muted)]">
               {learn.standfirst}

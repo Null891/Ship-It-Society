@@ -25,7 +25,10 @@ const RAIL = [
   { id: "format-title", label: "Format" },
   { id: "security-title", label: "Security" },
   { id: "prizes-title", label: "Prizes" },
+  { id: "learn-title", label: "Learn" },
   { id: "sponsors-title", label: "Sponsors" },
+  { id: "countdown-title", label: "Schedule" },
+  { id: "faq-title", label: "FAQ" },
   { id: "join-title", label: "Join" },
 ];
 

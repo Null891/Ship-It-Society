@@ -1,0 +1,65 @@
+/* The cube's own geometry. Tokens come from app/globals.css. */
+
+.stage {
+  perspective: 900px;
+  display: grid;
+  place-items: center;
+}
+
+.tilt {
+  transform-style: preserve-3d;
+}
+
+.cube {
+  position: relative;
+  width: var(--size, 210px);
+  height: var(--size, 210px);
+  transform-style: preserve-3d;
+  animation: cube-spin 26s linear infinite;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--color-paper) 42%, transparent);
+  /* A faint wash so the far faces read as behind the near ones, and so the
+     word behind the cube dims rather than disappears. */
+  background: color-mix(in srgb, var(--color-ink) 62%, transparent);
+}
+
+.front {
+  transform: translateZ(calc(var(--size, 210px) / 2));
+  border-color: var(--color-marigold);
+}
+.back {
+  transform: rotateY(180deg) translateZ(calc(var(--size, 210px) / 2));
+}
+.right {
+  transform: rotateY(90deg) translateZ(calc(var(--size, 210px) / 2));
+}
+.left {
+  transform: rotateY(-90deg) translateZ(calc(var(--size, 210px) / 2));
+}
+.top {
+  transform: rotateX(90deg) translateZ(calc(var(--size, 210px) / 2));
+}
+.bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--size, 210px) / 2));
+}
+
+@keyframes cube-spin {
+  from {
+    transform: rotateX(-22deg) rotateY(0deg);
+  }
+  to {
+    transform: rotateX(-22deg) rotateY(360deg);
+  }
+}
+
+/* Parked at a three-quarter angle, where it still reads as a cube. */
+@media (prefers-reduced-motion: reduce) {
+  .cube {
+    animation: none;
+    transform: rotateX(-22deg) rotateY(-34deg);
+  }
+}

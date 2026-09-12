@@ -264,7 +264,6 @@ const PHASE = {
   frameIn: [0.36, 0.5],
   scan: [0.56, 0.8],
   deploy: [0.78, 1.0],
-  readout: [0.12, 0.2],
 } as const;
 
 /* --- drawing -------------------------------------------------------------- */
@@ -484,68 +483,6 @@ function drawUrlBar(
   ctx.restore();
 }
 
-/** Drawn OUTSIDE the stage transform, so it stays legible on a phone where
- *  the stage scales to a fraction of its nominal size. */
-function drawReadout(
-  ctx: CanvasRenderingContext2D,
-  pal: Palette,
-  p: number,
-  scanT: number,
-  deployT: number,
-  box: { left: number; right: number; y: number; size: number },
-  /** The readout belongs to the sequence, not to the title state, so it stays
-   *  hidden while the headline still owns the screen. */
-  alpha: number,
-) {
-  if (alpha <= 0.01) return;
-
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.font = `500 ${box.size}px "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
-  ctx.textBaseline = "middle";
-  ctx.letterSpacing = "0.09em";
-
-  let label: string;
-  let value = "";
-  let accent = false;
-
-  if (p < PHASE.morph[0]) {
-    label = "BUILDING";
-    value = `${Math.round(seg(p, PHASE.codeIn[0], PHASE.codeIn[1]) * 100)}%`;
-  } else if (p < PHASE.scan[0]) {
-    label = "ASSEMBLING INTERFACE";
-  } else if (scanT < 1) {
-    // Findings resolve downward as the sweep proceeds: 3 -> 0.
-    const remaining = Math.max(0, 3 - Math.floor(scanT * 4));
-    label = "SCANNING";
-    value = `${remaining} OPEN`;
-    accent = remaining > 0;
-  } else if (deployT < 0.55) {
-    label = "SCAN CLEAN";
-    value = "0 FINDINGS";
-  } else {
-    label = "LIVE";
-    value = "SHIPPED";
-    accent = true;
-  }
-
-  ctx.fillStyle = withAlpha(pal.paper, 0.45);
-  ctx.fillText(label, box.left, box.y);
-  const lw = ctx.measureText(label).width;
-  if (value) {
-    ctx.fillStyle = accent ? pal.marigold : withAlpha(pal.paper, 0.85);
-    ctx.fillText(value, box.left + lw + box.size * 1.5, box.y);
-  }
-
-  const live = deployT > 0.55;
-  const dotAlpha = live ? 1 : 0.3 + 0.3 * Math.abs(Math.sin(p * 40));
-  ctx.fillStyle = withAlpha(live ? pal.marigold : pal.paper, dotAlpha);
-  ctx.beginPath();
-  ctx.arc(box.right, box.y, box.size * 0.33, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
 /* --- entry point ---------------------------------------------------------- */
 
 /**
@@ -566,8 +503,11 @@ export function drawFrame(
   const narrow = w < 720 || h / w > 1.15;
   const L = narrow ? PORTRAIT : LANDSCAPE;
   const margin = narrow ? 16 : 40;
-  const readoutSize = narrow ? 11 : 12;
-  const reserve = readoutSize * 4;
+  /* Room at the foot of the stage for the viewfinder's status bar. The
+     sequence used to print its own mono readout there; that state is now
+     reported in real DOM text by the hero's HUD overlay, which says more and
+     costs the canvas nothing. Only the clearance is still needed. */
+  const reserve = narrow ? 60 : 72;
 
   const scale = Math.min(
     (w - margin * 2) / L.focus.w,
@@ -620,24 +560,6 @@ export function drawFrame(
   drawUrlBar(ctx, L, pal, deployT);
 
   ctx.restore();
-
-  // Screen-space chrome, aligned to the window's on-screen edges.
-  const sx = (v: number) => w / 2 + (v - cx) * k;
-  const sy = (v: number) => h / 2 + (v - cy) * k;
-  drawReadout(
-    ctx,
-    pal,
-    prog,
-    scanT,
-    deployT,
-    {
-      left: Math.max(margin, sx(L.win.x)),
-      right: Math.min(w - margin, sx(L.win.x + L.win.w)),
-      y: Math.min(h - margin, sy(L.win.y + L.win.h) + readoutSize * 2.4),
-      size: readoutSize,
-    },
-    seg(prog, PHASE.readout[0], PHASE.readout[1]),
-  );
 }
 
 /** The frame shown when the visitor prefers reduced motion: scan complete,
