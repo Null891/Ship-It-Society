@@ -109,8 +109,9 @@ export function Viewfinder({
   cue,
   ref,
 }: {
-  /** The scroll cue's words, from content. */
-  cue: string;
+  /** The scroll cue's words, from content. Null where there is no scrub to
+   *  cue — reduced motion collapses the runway to a single screen. */
+  cue: string | null;
   ref?: React.Ref<ViewfinderHandle>;
 }) {
   const phaseRef = useRef<HTMLSpanElement>(null);
@@ -277,12 +278,14 @@ export function Viewfinder({
           <span className="mono-label order-2 hidden shrink-0 text-[var(--stage-subtle)] lg:block">
             {club.location}
           </span>
-          <span
-            ref={cueRef}
-            className="mono-label order-3 ml-auto shrink-0 text-[var(--stage-subtle)] md:order-5 md:ml-0"
-          >
-            {cue}
-          </span>
+          {cue && (
+            <span
+              ref={cueRef}
+              className="mono-label order-3 ml-auto shrink-0 text-[var(--stage-subtle)] md:order-5 md:ml-0"
+            >
+              {cue}
+            </span>
+          )}
           <span className="order-4 flex w-full min-w-0 items-center gap-2.5 md:w-auto md:flex-1">
             <span ref={ticksRef} className="min-w-0 flex-1">
               <TickBar total={CYCLE_DAYS} filled={0} height={TICK_H} />

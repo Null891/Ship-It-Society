@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { routeMetadata } from "@/lib/metadata";
 import { ApplyForm } from "@/components/join/ApplyForm";
@@ -175,8 +176,42 @@ export default async function JoinPage({
       {/* Not ready */}
       <section aria-labelledby="not-ready-title" className="pb-8 pt-28 md:pt-40">
         <div className="edge">
-          <div className="grid12 items-end gap-y-8 border-t border-[var(--stage-line)] pt-10">
-            <div className="col-span-4 md:col-span-6 md:col-start-6">
+          <div className="grid12 items-start gap-y-8 border-t border-[var(--stage-line)] pt-10">
+            {/* The three ways in that are not an application, so this half of
+                the row carries the routes rather than sitting empty. */}
+            <ul className="col-span-4 md:col-span-5">
+              {(
+                [
+                  [forms.speaker, "speak"],
+                  [forms.gift, "give"],
+                  [forms.interest, "updates"],
+                ] as const
+              ).map(([f, anchor], i) => (
+                <li key={f.id} className="border-b border-[var(--stage-line)] first:border-t">
+                  <Link
+                    href={`/get-involved#${anchor}`}
+                    className="group flex items-baseline justify-between gap-4 py-4"
+                  >
+                    <span className="flex items-baseline gap-4">
+                      <span aria-hidden className="mono-label text-marigold">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-lg font-normal">{f.eyebrow}</span>
+                    </span>
+                    <svg
+                      aria-hidden
+                      viewBox="0 0 12 12"
+                      className="h-3 w-3 shrink-0 text-[var(--stage-subtle)] transition-transform duration-[var(--dur-base)] ease-[var(--ease-out-expo)] group-hover:translate-x-1 group-hover:text-marigold"
+                      fill="none"
+                    >
+                      <path d="M1.5 6h8M6.5 3l3 3-3 3" stroke="currentColor" strokeWidth="1.3" />
+                    </svg>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="col-span-4 md:col-span-6 md:col-start-7">
               <h2 id="not-ready-title" className="text-2xl font-normal">
                 {forms.interest.title}
               </h2>
