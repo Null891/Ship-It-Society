@@ -30,6 +30,27 @@ export function Wordmark({
   );
 }
 
+/* ==========================================================================
+   The small mark.
+
+   The club's identity is the crest (components/brand/Crest.tsx): a navy and
+   gold seal with a square-rigged ship carrying `</>` on its mainsail. A crest
+   with two rings of text is illegible below about 96px, so it cannot be the
+   favicon — this is the ship on its own, in the site's palette, drawn as four
+   flat shapes with no stroke so it survives a 16px browser tab.
+
+   Same ship, same idea, different register. Keep the paths in sync with
+   app/icon.svg, which is the same drawing.
+   ========================================================================== */
+
+/** The ship, as four disjoint shapes: mast, mainsail, foresail, hull. */
+export const SHIP_PARTS = [
+  "M30.5 8h3.5v34h-3.5z",
+  "M36 14l17 6-1 21H36z",
+  "M28.5 20L14 27l1 14h13.5z",
+  "M6 45h52l-8 12H14z",
+];
+
 /** Square mark for the favicon, the OG card, and empty portrait tiles. */
 export function Monogram({
   size = 40,
@@ -49,11 +70,11 @@ export function Monogram({
       aria-label="Ship It Society"
     >
       <rect width="64" height="64" fill="#000000" />
-      <path
-        d="M23.4 21.6c0-2.9 2.5-4.9 6.6-4.9 3.4 0 6 1.3 7.6 3.6l-4.1 2.7c-.9-1.2-2.1-1.8-3.5-1.8-1.4 0-2.2.5-2.2 1.3 0 .9.9 1.3 3.4 2l1.6.4c4.4 1.2 6.6 3.2 6.6 6.7 0 3.5-3 5.9-7.4 5.9-4 0-7-1.6-8.6-4.4l4.2-2.6c1 1.6 2.5 2.4 4.4 2.4 1.5 0 2.4-.5 2.4-1.4 0-.9-.7-1.3-3.1-2l-1.7-.5c-4.3-1.2-6.2-3.2-6.2-7.4Z"
-        fill="#ffffff"
-      />
-      <rect x="41" y="32.4" width="5.4" height="5.4" fill="#ff9f0a" />
+      <g fill="#ff9f0a">
+        {SHIP_PARTS.map((d) => (
+          <path key={d} d={d} />
+        ))}
+      </g>
     </svg>
   );
 }

@@ -39,6 +39,10 @@ export const club = {
   github: "https://github.com/Null891/Ship-It-Society",
   /** Meeting slides. Leave "" to hide every slides link on the site. */
   slides: "",
+  /** The crest's motto. Three words, lower case, as drawn on the seal. */
+  tagline: "imagine, build, ship",
+  /** The year on the crest's ribbon. */
+  founded: 2026,
   /** The club's own description, used on About, in forms and in metadata. */
   bio: "Ship It Society is a hackathon club at Fremont High School dedicated to helping students bring their ideas to life. Each hackathon follows the same principle: take a concept from initial idea to a fully deployed product.",
 };
@@ -408,6 +412,31 @@ export const about = {
   eyebrow: "About",
   title: ["Ideas in.", "Products out."],
   standfirst: club.bio,
+  /* The crest's motto, and what each word costs you. The seal says three
+     words; this is the club being honest about what they mean, which is the
+     closest thing the site has to a pitch. Keep the terms in the same order
+     as the tagline, and keep them plain — no hype verbs (CLAUDE.md §2). */
+  motto: {
+    eyebrow: "The crest",
+    headline: "Three words, and what they ask of you.",
+    steps: [
+      {
+        term: "imagine",
+        detail:
+          "Bring an idea. It does not have to be good yet, and it does not have to be original. Most of the best ones start as something small that annoyed you.",
+      },
+      {
+        term: "build",
+        detail:
+          "One month, a team of up to four, and tools that handle the boring parts. You will not be left to work it out alone — officers and mentors sit with teams.",
+      },
+      {
+        term: "ship",
+        detail:
+          "A real URL a stranger can open, that has passed a security review first. Most students never get this far. That is the whole point of the club.",
+      },
+    ],
+  },
   facts: [
     { term: "Founded by", detail: `${officers.length} students, who run every hackathon themselves.` },
     { term: "Format", detail: "One-month hackathons, idea to deployed product." },

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
+import { Crest } from "@/components/brand/Crest";
 import { CopyEmail } from "@/components/ui/CopyEmail";
 import { StatusDot } from "@/components/ui/Hud";
 import { LocalClock } from "@/components/footer/LocalClock";
@@ -79,13 +80,19 @@ export function Footer() {
         {/* ---- System panel ---------------------------------------------- */}
         <div className="chamfer-line [--cut:16px] p-6 md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-6">
-            <div>
-              <Link href="/" className="inline-flex text-xl">
-                <Wordmark />
-              </Link>
-              <p className="pretty mt-4 max-w-[38ch] text-sm text-[var(--stage-muted)]">
-                {footer.note}
-              </p>
+            {/* The crest signs the page off, the way a seal signs a document.
+                Small, beside the wordmark — the formal mark and the working
+                one in the same row. */}
+            <div className="flex items-start gap-5">
+              <Crest size={104} uid="footer-crest" className="mt-1 hidden shrink-0 sm:block" />
+              <div>
+                <Link href="/" className="inline-flex text-xl">
+                  <Wordmark />
+                </Link>
+                <p className="pretty mt-4 max-w-[38ch] text-sm text-[var(--stage-muted)]">
+                  {footer.note}
+                </p>
+              </div>
             </div>
 
             <dl className="grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-4">

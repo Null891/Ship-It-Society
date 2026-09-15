@@ -53,6 +53,16 @@
   --color-ok: #32d74b;
   --color-alert: #ff5a4e;
 
+  /* The club crest's own palette. These belong to the seal and to nothing
+     else on this site — the crest is the club's formal mark (school paperwork,
+     merch, slides) and it keeps its navy and gold wherever it appears. Do not
+     reach for them for UI: the interface has one accent, and it is marigold.
+     See components/brand/Crest.tsx. */
+  --color-crest-navy: #1d3a5f;
+  --color-crest-gold: #c9a363;
+  --color-crest-gold-deep: #a8834a;
+  --color-crest-cream: #f6f1e5;
+
   /* Plate grounds. Stone is paired only with ink and marigold FILLS. */
   --color-stone: #b7baaf;
   --color-stone-hi: #d0d3c8;

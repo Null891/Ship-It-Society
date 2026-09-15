@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Crest } from "@/components/brand/Crest";
 import { Eyebrow, Button } from "@/components/ui/Button";
 import { HudFrame, Readout, StatusDot, Tag } from "@/components/ui/Hud";
 import { Annotation, Barcode, RegMark } from "@/components/ui/Poster";
@@ -63,6 +64,62 @@ export default function AboutPage() {
         standfirst={about.standfirst}
         meta={about.facts.map((f) => ({ label: f.term, value: f.detail }))}
       />
+
+      {/* ---- The crest ---------------------------------------------------
+          The club's formal mark, given room to be looked at, beside the three
+          words on its ribbon and what each one actually asks of a member.
+          The seal keeps its navy and gold against the black — it is the one
+          thing on the site that is allowed to. */}
+      <section className="pt-20 md:pt-28" aria-labelledby="crest-title">
+        <div className="edge">
+          <div className="grid12 items-center gap-y-14">
+            <Reveal className="col-span-4 md:col-span-5">
+              <div className="relative mx-auto w-full max-w-[236px] sm:max-w-[300px] lg:max-w-[340px]">
+                <RegMark
+                  size={14}
+                  aria-hidden
+                  className="absolute -left-3 -top-3 text-[var(--stage-subtle)]"
+                />
+                <RegMark
+                  size={14}
+                  aria-hidden
+                  className="absolute -bottom-3 -right-3 text-[var(--stage-subtle)]"
+                />
+                <Crest size={340} className="h-auto w-full" />
+              </div>
+            </Reveal>
+
+            <div className="col-span-4 md:col-span-6 md:col-start-7">
+              <Eyebrow index={1}>{about.motto.eyebrow}</Eyebrow>
+              <h2 id="crest-title" className="optical balance mt-4 text-3xl font-light">
+                {about.motto.headline}
+              </h2>
+
+              <Stagger as="dl" className="mt-10">
+                {about.motto.steps.map((s, i) => (
+                  <StaggerItem
+                    index={i}
+                    key={s.term}
+                    className="grid grid-cols-1 gap-x-8 border-t border-[var(--stage-line)] py-6 md:grid-cols-[minmax(0,150px)_1fr]"
+                  >
+                    <dt className="flex items-baseline gap-3">
+                      <span aria-hidden className="mono-label tnum text-marigold">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-xl font-normal lowercase text-[var(--stage-fg)]">
+                        {s.term}
+                      </span>
+                    </dt>
+                    <dd className="pretty mt-2 max-w-[54ch] text-base text-[var(--stage-muted)] md:mt-0">
+                      {s.detail}
+                    </dd>
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ---- Officers ----------------------------------------------------
           Portrait tiles frame a monogram until a photo arrives. On a fine
