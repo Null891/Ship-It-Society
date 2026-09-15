@@ -136,7 +136,20 @@ export function HeroSequence() {
     if (!canvas || !stage) return;
     const { width, height } = stage.getBoundingClientRect();
     if (width === 0 || height === 0) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Capped at 1.5, not 2. At 2 a 1440x900 stage is a 2880x1800 backing
+    // store — 5.2M pixels to clear and repaint on every scroll frame, which
+    // measured 30fps at only 3x CPU throttle on a retina screen while the
+    // same page held 60fps at dpr 1. At 1.5 it is 2.9M pixels, 44% less fill,
+    // and the sequence is line art on black: there is no photographic detail
+    // for the extra half-pixel to resolve.
+    //
+    // Honest about what this buys: less fill and less GPU memory, but NOT
+    // 60fps at dpr 2 — that still measures 30fps at 3x throttle after the
+    // change, so the remaining cost is the number of draw calls in
+    // drawFrame, not the resolution they are drawn at. Do not raise this
+    // without re-measuring at deviceScaleFactor 2; the default headless DPR
+    // is 1, so the whole cost is invisible unless you ask for it.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     canvas.style.width = `${width}px`;

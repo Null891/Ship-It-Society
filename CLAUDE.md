@@ -128,16 +128,29 @@ exists and reduced motion is off, with a 3s dead-man's switch.
 
 ### Measured baseline — do not regress
 
-Production, desktop, measured 2026-09-11. Re-measure before claiming a win.
+Production, desktop, 1440x900. Re-measure before claiming a win.
 
 | | |
 |---|---|
-| LCP | **440ms**, on a hero line element (was 1148ms when it waited on JS) |
+| LCP | **440–650ms**, on a hero line element (was 1148ms when it waited on JS) |
 | CLS | **0** |
-| Hero scrub, 4x CPU throttle | **60fps median** (16.7ms), p95 33.4ms |
+| Hero scrub, dpr 1, throttle 1x / 2x / 3x | **60fps** |
+| Hero scrub, dpr 1, throttle 4x | **on the boundary** — flips 30/60 |
+| Hero scrub, dpr 2, throttle 3x+ | **30fps** |
 
-The scrub still shows 0–2 frames over 50ms per run as later sections enter.
-That is section entry, not the scrub itself; it was not chased further.
+**Read this before quoting a number.** The hero canvas costs just under one
+16.7ms frame at 3x throttle, so at 4x it lands exactly on the vsync boundary
+and the median flips between 33.3ms and 16.7ms depending on what else is
+running on the host. An earlier note here claimed a flat "60fps at 4x"; that
+was one side of a coin toss, not a reproducible result. Quote the throttle
+level AND the device pixel ratio, or the number means nothing.
+
+The real finding is the dpr row: **Playwright defaults to deviceScaleFactor 1,
+so a retina laptop's cost is invisible unless you ask for it.** At dpr 2 the
+scrub is 30fps from 3x throttle up, and capping the canvas at dpr 1.5
+(HeroSequence) cut the backing store 44% without fixing it — the remaining
+cost is the number of draw calls in `lib/sequence.ts`, not the resolution.
+That is the thing to attack if the hero is optimised further.
 
 ### Hydration safety
 
