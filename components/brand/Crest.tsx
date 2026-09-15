@@ -198,7 +198,7 @@ export function Crest({
         fill={NAVY}
         textAnchor="middle"
       >
-        EST. {club.founded}
+        {`EST. ${club.founded}`}
       </text>
     </svg>
   );
