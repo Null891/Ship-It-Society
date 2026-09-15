@@ -183,7 +183,7 @@ export default async function JoinPage({
               {(
                 [
                   [forms.speaker, "speak"],
-                  [forms.gift, "give"],
+                  [forms.volunteer, "help"],
                   [forms.interest, "updates"],
                 ] as const
               ).map(([f, anchor], i) => (

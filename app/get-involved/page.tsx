@@ -45,7 +45,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const SECTIONS = [
   { id: "updates", spec: forms.interest },
   { id: "speak", spec: forms.speaker },
-  { id: "give", spec: forms.gift },
+  { id: "help", spec: forms.volunteer },
 ] as const;
 
 const names = (spec: FormSpec) => spec.fields.map((f) => f.name);
@@ -131,12 +131,12 @@ export default async function GetInvolvedPage({ searchParams }: { searchParams: 
               </HudFrame>
             </section>
 
-            {/* 03 — gifts: a filled panel again, closing the page. */}
-            <section id="give" aria-labelledby="give-title" className="scroll-mt-28">
+            {/* 03 — mentors and judges: a filled panel again, closing the page. */}
+            <section id="help" aria-labelledby="help-title" className="scroll-mt-28">
               <div className="chamfer-line px-5 py-8 [--fill:var(--color-surface-900)] [--ground:var(--color-surface-900)] [--line:var(--stage-line-strong)] sm:px-8 md:px-10 md:py-10">
                 <div className="grid grid-cols-1 gap-x-12 gap-y-10 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-                  <Intro id="give" index={3} spec={forms.gift} />
-                  <Form spec={forms.gift} outcome={outcome(forms.gift)} />
+                  <Intro id="help" index={3} spec={forms.volunteer} />
+                  <Form spec={forms.volunteer} outcome={outcome(forms.volunteer)} />
                 </div>
               </div>
             </section>

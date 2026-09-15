@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
+import { PrivacyNote } from "@/components/forms/PrivacyNote";
 import { StatusDot } from "@/components/ui/Hud";
 import type { FieldSpec, FormSpec } from "@/content/forms";
 import { fallbacksFor, schemaFor, toFieldErrors } from "@/lib/forms/schema";
@@ -209,6 +210,8 @@ export function Form({
             {sending ? "Sending." : ""}
           </p>
         </div>
+
+        <PrivacyNote className="mt-7" />
       </form>
     </div>
   );

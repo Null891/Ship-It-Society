@@ -53,7 +53,7 @@ export type FieldSpec =
       error?: string;
     };
 
-export type FormId = "interest" | "speaker" | "question" | "gift";
+export type FormId = "interest" | "speaker" | "question" | "volunteer";
 
 export type FormSpec = {
   id: FormId;
@@ -167,36 +167,36 @@ export const forms: Record<FormId, FormSpec> = {
     },
   },
 
-  gift: {
-    id: "gift",
-    label: "gift offer",
-    eyebrow: "Give",
-    title: "Donate a prize or a gift.",
+  volunteer: {
+    id: "volunteer",
+    label: "offer to help",
+    eyebrow: "Help out",
+    title: "Mentor a team, or judge a demo.",
     intro:
-      "Prize money, food for demo day, hardware, software credits. Tell us what you would like to give and an officer will reply to arrange it. Nothing is charged on this site.",
+      "Members learn faster with someone who has shipped before in the room. Sit with a team for an hour, judge at the end of a cycle, or run a workshop on something you know well.",
     fields: [
       { name: "name", label: "Name", kind: "text", required: true, max: 80, autoComplete: "name", error: "Please enter your name." },
       { name: "email", label: "Email", kind: "email", required: true, max: 120, autoComplete: "email", error: "Please enter an email we can reply to." },
       {
         name: "organization",
-        label: "Organization, if any",
+        label: "Where you work or study, if relevant",
         kind: "text",
         required: false,
         max: 120,
         autoComplete: "organization",
       },
       {
-        name: "gift",
-        label: "What you would like to give",
+        name: "help",
+        label: "How you would like to help",
         kind: "multi",
         required: true,
-        options: ["Prize money", "Food for demo day", "Hardware or gear", "Software or credits", "Something else"],
+        options: ["Mentor a team", "Judge a demo day", "Run a workshop", "Something else"],
         help: "Pick as many as apply.",
         error: "Pick at least one.",
       },
       { name: "note", label: "Anything we should know", kind: "textarea", required: false, max: 600 },
     ],
-    submit: "Offer a gift",
+    submit: "Offer to help",
     success: {
       title: "Thank you.",
       body: "An officer will reply by email to arrange it.",
@@ -207,7 +207,7 @@ export const forms: Record<FormId, FormSpec> = {
 /** The page that gathers every way in that is not a membership application. */
 export const getInvolvedPage = {
   eyebrow: "Get involved",
-  title: ["Speak, give,", "or stay in the loop."],
+  title: ["Speak, mentor,", "or stay in the loop."],
   standfirst:
-    "Members apply to join. Everyone else can still be part of it: give a talk, donate a prize, or get the dates by email.",
+    "Members apply to join. Everyone else can still be part of it: give a talk, mentor a team, or get the dates by email.",
 };

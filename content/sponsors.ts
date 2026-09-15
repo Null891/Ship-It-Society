@@ -79,27 +79,32 @@ export const sponsorPage = {
       detail: "ArgosX scans for every team, so nothing ships without a review.",
     },
   ],
-  pitch: {
-    eyebrow: "Become a sponsor",
-    headline: "What sponsorship gets you.",
+  /* What support does NOT buy. This used to be a sponsorship sales pitch —
+     placement, access, and a named prize whose funder sat on its own judging
+     panel. For a student club that was the wrong offer to make and the wrong
+     thing to publish: it put influence up for sale. The honest version of this
+     section is the boundary itself. */
+  principles: {
+    eyebrow: "How this works",
+    headline: "What support does not buy.",
     standfirst:
-      "We are a new club with a specific promise: every project ships, and every project is security tested first. If that is the kind of work you want your name on, get in touch.",
-    offers: [
+      "The club is run by students and the work belongs to them. Support pays for prizes and tooling. It buys no say in what gets built, and no say in who wins.",
+    terms: [
       {
-        term: "Placement",
-        detail: "Your mark on this site, on every hackathon page, and in the room at demos.",
+        term: "Students choose",
+        detail: "Members pick their own projects. No sponsor sets a brief, a theme, or a stack.",
       },
       {
-        term: "Access",
-        detail: "First look at what members build, and an open door to the students who built it.",
+        term: "Judging is independent",
+        detail: "Officers and invited judges score against the published rubric. Funding a prize does not buy a seat on the panel.",
       },
       {
-        term: "A named prize",
-        detail: "Fund a prize category of your own and sit on the panel that judges it.",
+        term: "The work stays theirs",
+        detail: "Members keep the copyright and the deployment. Nothing is signed over to the club or to a sponsor.",
       },
       {
-        term: "Real numbers",
-        detail: "A short write-up after each hackathon. What shipped, what it cost, who took part.",
+        term: "Credit, not advertising",
+        detail: "Sponsors are named here and thanked at demos. This site carries no advertising and no affiliate links.",
       },
     ],
     cta: { label: "Email the club", href: `mailto:${club.email}` },

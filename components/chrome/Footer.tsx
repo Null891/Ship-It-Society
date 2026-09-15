@@ -26,6 +26,7 @@ const COLUMNS = [
       { href: "/handbook", label: "Handbook" },
       ...(projects.length > 0 ? [{ href: "/projects", label: "Projects" }] : []),
       { href: "/about", label: "About" },
+      { href: "/privacy", label: "Privacy" },
     ],
   },
   {
@@ -33,7 +34,7 @@ const COLUMNS = [
     links: [
       { href: "/join", label: "Apply to join" },
       { href: "/get-involved#speak", label: "Speak at a meeting" },
-      { href: "/get-involved#give", label: "Donate a prize" },
+      { href: "/get-involved#help", label: "Mentor or judge" },
       { href: "/sponsors", label: "Sponsors" },
     ],
   },

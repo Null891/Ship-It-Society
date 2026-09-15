@@ -559,8 +559,8 @@ const faqItems: (FaqItem | null)[] = [
       }
     : null,
   {
-    q: "Can I give a talk, or donate to the club?",
-    a: "Yes. Each has a short form on the Get involved page: offer a talk or a workshop at a meeting, or donate a prize or a gift. An officer replies by email to arrange it.",
+    q: "Can I give a talk, or help out?",
+    a: "Yes. Each has a short form on the Get involved page: offer a talk or a workshop at a meeting, or mentor a team and judge at the end of a cycle. An officer replies by email to arrange it.",
     link: { label: "Get involved", href: "/get-involved" },
   },
 ];

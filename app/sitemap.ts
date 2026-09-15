@@ -27,6 +27,7 @@ const PAGES: { path: string; priority: number }[] = [
   { path: "/about", priority: 0.7 },
   { path: "/sponsors", priority: 0.6 },
   { path: "/get-involved", priority: 0.6 },
+  { path: "/privacy", priority: 0.3 },
 ];
 
 /** Home prints without a trailing slash, matching its canonical link. */

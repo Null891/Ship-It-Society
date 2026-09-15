@@ -12,6 +12,7 @@ import {
   TextField,
 } from "@/components/forms/Fields";
 import { useSubmission, type Errors, type Values } from "@/components/forms/useSubmission";
+import { PrivacyNote } from "@/components/forms/PrivacyNote";
 import {
   APPLY_FIELDS,
   APPLY_ORDER,
@@ -192,6 +193,8 @@ export function ApplyForm({ outcome }: { outcome?: Outcome }) {
           {sending ? "Sending your application." : ""}
         </p>
       </div>
+
+      <PrivacyNote className="mt-7" />
     </form>
   );
 }

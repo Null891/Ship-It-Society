@@ -49,7 +49,7 @@ export const FORM_HOME: Record<AnyFormId, string> = {
   apply: "/join",
   interest: "/get-involved",
   speaker: "/get-involved",
-  gift: "/get-involved",
+  volunteer: "/get-involved",
   question: "/",
 };
 

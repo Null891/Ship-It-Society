@@ -137,10 +137,10 @@ export default function SponsorsPage() {
         </div>
       </section>
 
-      {/* ---- Become a sponsor — the page's grid break -------------------- */}
+      {/* ---- What support does not buy — the page's grid break ----------- */}
       <section
         className="relative mt-24 overflow-hidden border-y border-[var(--stage-line)] bg-surface-900 py-20 md:mt-32 md:py-28"
-        aria-labelledby="pitch-title"
+        aria-labelledby="principles-title"
       >
         <div className="hud-columns pointer-events-none absolute inset-0 opacity-30" aria-hidden />
         <div className="edge relative">
@@ -148,21 +148,18 @@ export default function SponsorsPage() {
             <div className="col-span-4 md:col-span-5">
               <p className="mono-label flex items-center gap-2.5 text-[var(--stage-muted)]">
                 <RegMark size={12} className="text-marigold" />
-                {sponsorPage.pitch.eyebrow}
+                {sponsorPage.principles.eyebrow}
               </p>
-              <h2 id="pitch-title" className="optical mt-4 text-3xl font-light">
-                {sponsorPage.pitch.headline}
+              <h2 id="principles-title" className="optical mt-4 text-3xl font-light">
+                {sponsorPage.principles.headline}
               </h2>
               <p className="pretty mt-6 max-w-[44ch] text-base text-[var(--color-paper-muted)]">
-                {sponsorPage.pitch.standfirst}
+                {sponsorPage.principles.standfirst}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button href="/get-involved#give" size="md" arrow>
-                  Donate a prize or gift
-                </Button>
                 <Button href={`mailto:${club.email}`} variant="ghost" size="md">
-                  {sponsorPage.pitch.cta.label}
+                  {sponsorPage.principles.cta.label}
                 </Button>
               </div>
 
@@ -173,7 +170,7 @@ export default function SponsorsPage() {
             </div>
 
             <dl className="col-span-4 md:col-span-6 md:col-start-7">
-              {sponsorPage.pitch.offers.map((o, i) => (
+              {sponsorPage.principles.terms.map((o, i) => (
                 <div
                   key={o.term}
                   className="grid grid-cols-1 gap-x-6 border-t border-[var(--stage-line)] py-5 md:grid-cols-[168px_1fr]"
@@ -189,9 +186,9 @@ export default function SponsorsPage() {
               <div className="mt-7 flex items-center justify-between gap-4 border-t border-[var(--stage-line)] pt-5">
                 <span className="mono-label inline-flex items-center gap-2 text-[var(--stage-muted)]">
                   <StatusDot tone="ok" blink />
-                  Taking sponsors for this season
+                  Students own everything they build
                 </span>
-                <Barcode seed="become-a-sponsor" bars={16} height={13} className="opacity-40" />
+                <Barcode seed="how-this-works" bars={16} height={13} className="opacity-40" />
               </div>
             </dl>
           </div>

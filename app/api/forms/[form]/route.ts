@@ -9,7 +9,7 @@ import {
 
 /* ==========================================================================
    POST /api/forms/<id> — the built-in forms that replaced the club's Google
-   Forms: interest, speaker, question, gift.
+   Forms: interest, speaker, question, volunteer.
 
    Each form's schema, limits and email labels come from its spec in
    content/forms.ts, so there is nothing per-form to maintain here. An id
